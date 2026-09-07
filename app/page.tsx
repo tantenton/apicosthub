@@ -1,5 +1,7 @@
 import React from 'react';
 import HeroCalculator from '@/components/HeroCalculator';
+import RouterCascadeSimulator from '@/components/RouterCascadeSimulator';
+import CodeSnippetPlayground from '@/components/CodeSnippetPlayground';
 import ParetoMatrixChart from '@/components/ParetoMatrixChart';
 import ArchitectureBanner from '@/components/ArchitectureBanner';
 import HeadToHeadCalculator from '@/components/HeadToHeadCalculator';
@@ -14,7 +16,15 @@ export default function Home() {
       {/* Main Interactive Tokenomics Workbench */}
       <HeroCalculator />
 
-      {/* 2D Pareto Frontier Matrix: Artificial Analysis Style */}
+      {/* Developer Integration Code Generator */}
+      <div className="w-full max-w-7xl px-4 sm:px-6">
+        <CodeSnippetPlayground />
+      </div>
+
+      {/* Multi-Tier Cascading Router Simulator */}
+      <RouterCascadeSimulator />
+
+      {/* 2D Pareto Frontier Matrix */}
       <div className="w-full max-w-7xl px-4 sm:px-6">
         <ParetoMatrixChart />
       </div>
@@ -24,7 +34,7 @@ export default function Home() {
         <AdPlacement slotId="mid-feed-sponsor" format="horizontal-leaderboard" />
       </div>
 
-      {/* 3D Production Architecture Breakdown */}
+      {/* 3D Production Architecture & Looping Video */}
       <div className="w-full max-w-7xl px-4 sm:px-6">
         <ArchitectureBanner />
       </div>

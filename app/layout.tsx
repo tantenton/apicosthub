@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import Navbar from '@/components/Navbar';
+import LiveTelemetryTicker from '@/components/LiveTelemetryTicker';
 import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
@@ -74,6 +75,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-slate-50 text-slate-900 antialiased flex flex-col justify-between">
         <Navbar />
+        <LiveTelemetryTicker />
         <main className="flex-1">{children}</main>
         <Footer />
       </body>
