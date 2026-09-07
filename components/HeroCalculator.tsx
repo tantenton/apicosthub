@@ -403,141 +403,161 @@ export default function HeroCalculator() {
             />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-600 uppercase tracking-wider font-semibold select-none">
+          <div className="overflow-x-auto max-h-[680px]">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead className="sticky top-0 z-10 bg-slate-100/95 backdrop-blur-md border-b border-slate-200 text-slate-700 uppercase tracking-widest font-mono text-[10px] select-none shadow-2xs">
                 <tr>
                   <th
                     onClick={() => handleSort('name')}
-                    className="py-3 px-4 sm:px-6 cursor-pointer hover:text-slate-900 transition-colors"
+                    className="py-3 px-4 sm:px-6 cursor-pointer hover:text-indigo-600 transition-colors"
                   >
                     <div className="flex items-center gap-1.5">
-                      <span>Model Architecture</span>
+                      <span>MODEL // SPEC</span>
                       <ArrowUpDown className="w-3 h-3 text-slate-400" />
                     </div>
                   </th>
                   <th
                     onClick={() => handleSort('monthlyCost')}
-                    className="py-3 px-4 cursor-pointer hover:text-slate-900 transition-colors"
+                    className="py-3 px-4 cursor-pointer hover:text-indigo-600 transition-colors"
                   >
                     <div className="flex items-center gap-1.5">
-                      <span>Calculated Monthly</span>
+                      <span>EST. MONTHLY OPEX</span>
                       <ArrowUpDown className="w-3 h-3 text-slate-400" />
                     </div>
                   </th>
                   <th
                     onClick={() => handleSort('inputPer1M')}
-                    className="py-3 px-4 cursor-pointer hover:text-slate-900 transition-colors hidden md:table-cell"
+                    className="py-3 px-4 cursor-pointer hover:text-indigo-600 transition-colors hidden md:table-cell"
                   >
                     <div className="flex items-center gap-1.5">
-                      <span>Input / 1M</span>
+                      <span>INPUT / 1M</span>
                       <ArrowUpDown className="w-3 h-3 text-slate-400" />
                     </div>
                   </th>
                   <th
                     onClick={() => handleSort('outputPer1M')}
-                    className="py-3 px-4 cursor-pointer hover:text-slate-900 transition-colors hidden md:table-cell"
+                    className="py-3 px-4 cursor-pointer hover:text-indigo-600 transition-colors hidden md:table-cell"
                   >
                     <div className="flex items-center gap-1.5">
-                      <span>Output / 1M</span>
+                      <span>OUTPUT / 1M</span>
                       <ArrowUpDown className="w-3 h-3 text-slate-400" />
                     </div>
                   </th>
-                  <th className="py-3 px-4 hidden lg:table-cell">Prompt Cache</th>
+                  <th className="py-3 px-4 hidden lg:table-cell">
+                    <span>KV CACHE HIT</span>
+                  </th>
                   <th
                     onClick={() => handleSort('tokensPerSec')}
-                    className="py-3 px-4 cursor-pointer hover:text-slate-900 transition-colors hidden sm:table-cell"
+                    className="py-3 px-4 cursor-pointer hover:text-indigo-600 transition-colors hidden sm:table-cell"
                   >
                     <div className="flex items-center gap-1.5">
-                      <span>Speed</span>
+                      <span>THROUGHPUT</span>
                       <ArrowUpDown className="w-3 h-3 text-slate-400" />
                     </div>
                   </th>
-                  <th className="py-3 px-4 text-right">Actions</th>
+                  <th className="py-3 px-4 text-right">
+                    <span>INSPECT</span>
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 bg-white">
                 {filteredAndSorted.map(({ model, calculation }, idx) => (
                   <tr
                     key={model.id}
                     className="hover:bg-indigo-50/40 transition-colors group"
                   >
                     {/* Model Name & Provider */}
-                    <td className="py-3.5 px-4 sm:px-6">
+                    <td className="py-3 px-4 sm:px-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-7 h-7 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center p-1 shadow-2xs">
+                        <div className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center p-1 shadow-2xs shrink-0">
                           {getProviderLogo(model.provider)}
                         </div>
                         <div>
                           <div className="font-bold text-slate-900 flex items-center gap-1.5">
-                            <Link href={`/model/${model.slug}`} className="hover:text-indigo-600 transition-colors">
+                            <Link href={`/model/${model.slug}`} className="hover:text-indigo-600 transition-colors font-mono">
                               {model.name}
                             </Link>
                             {model.recommended && (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                Popular
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase">
+                                Top Pick
+                              </span>
+                            )}
+                            {model.isOpenWeights && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase">
+                                Open Wts
                               </span>
                             )}
                           </div>
-                          <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
+                          <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5 font-mono">
                             <span>{model.provider}</span>
                             <span>·</span>
                             <span>{formatTokens(model.contextWindow)} ctx</span>
+                            <span>·</span>
+                            <span className="text-indigo-600 font-semibold">{model.qualityTier}</span>
                           </div>
                         </div>
                       </div>
                     </td>
 
                     {/* Calculated Monthly Cost */}
-                    <td className="py-3.5 px-4">
-                      <div className="font-mono font-bold text-slate-900 text-sm">
+                    <td className="py-3 px-4">
+                      <div className="font-mono font-bold text-slate-900 text-sm tabular-nums">
                         <AnimatedCounter
                           value={calculation.totalMonthlyCost}
                           prefix="$"
                           decimals={2}
                         />
                       </div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">
+                      <div className="text-[11px] text-slate-500 mt-0.5 font-mono tabular-nums">
                         ${(calculation.effectivePer1MTotal).toFixed(2)}/1M blended
                       </div>
                     </td>
 
                     {/* Input Price */}
-                    <td className="py-3.5 px-4 font-mono text-slate-700 hidden md:table-cell">
+                    <td className="py-3 px-4 font-mono text-slate-700 tabular-nums hidden md:table-cell">
                       ${model.inputPricePerMillion.toFixed(2)}
                     </td>
 
                     {/* Output Price */}
-                    <td className="py-3.5 px-4 font-mono text-slate-700 hidden md:table-cell">
+                    <td className="py-3 px-4 font-mono text-slate-700 tabular-nums hidden md:table-cell">
                       ${model.outputPricePerMillion.toFixed(2)}
                     </td>
 
                     {/* Cache Pricing */}
-                    <td className="py-3.5 px-4 hidden lg:table-cell">
+                    <td className="py-3 px-4 hidden lg:table-cell">
                       {model.cachedInputPricePerMillion ? (
-                        <div className="font-mono text-emerald-600 font-semibold">
-                          ${model.cachedInputPricePerMillion.toFixed(2)}
+                        <div className="font-mono text-emerald-600 font-semibold tabular-nums">
+                          ${model.cachedInputPricePerMillion.toFixed(3)}
                           <span className="text-[10px] text-slate-400 block font-normal">
                             (-{Math.round((1 - model.cachedInputPricePerMillion / model.inputPricePerMillion) * 100)}%)
                           </span>
                         </div>
                       ) : (
-                        <span className="text-slate-400 text-xs">No cache</span>
+                        <span className="text-slate-400 text-xs font-mono">No cache</span>
                       )}
                     </td>
 
                     {/* Speed Tokens/sec */}
-                    <td className="py-3.5 px-4 font-mono text-slate-600 hidden sm:table-cell">
-                      {model.typicalSpeedTokensPerSec} t/s
+                    <td className="py-3 px-4 font-mono text-slate-600 tabular-nums hidden sm:table-cell">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-slate-800">{model.typicalSpeedTokensPerSec}</span>
+                        <span className="text-[10px] text-slate-400">t/s</span>
+                      </div>
+                      <div className="w-16 bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1">
+                        <div
+                          style={{ width: `${Math.min(100, (model.typicalSpeedTokensPerSec / 180) * 100)}%` }}
+                          className="bg-indigo-500 h-full rounded-full"
+                        />
+                      </div>
                     </td>
 
                     {/* Action Link */}
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-3 px-4 text-right">
                       <Link
                         href={`/model/${model.slug}`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 font-semibold text-[11px] transition-all"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 font-mono font-semibold text-[11px] transition-all"
                       >
-                        <span>Deep Dive</span>
+                        <span>Spec</span>
                         <ArrowRight className="w-3 h-3" />
                       </Link>
                     </td>
