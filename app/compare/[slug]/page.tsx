@@ -178,7 +178,11 @@ export default function ComparePage({ params }: ComparePageProps) {
               {formatTokens(modelA.contextWindow)} vs {formatTokens(modelB.contextWindow)}
             </div>
             <div className="text-xs text-slate-500 mt-1">
-              {modelA.contextWindow > modelB.contextWindow ? `${modelA.name} has larger memory` : `${modelB.name} has larger memory`}
+              {modelA.contextWindow > modelB.contextWindow
+                ? `${modelA.name} has larger memory`
+                : modelA.contextWindow < modelB.contextWindow
+                ? `${modelB.name} has larger memory`
+                : 'Equal context capacity'}
             </div>
           </div>
 
