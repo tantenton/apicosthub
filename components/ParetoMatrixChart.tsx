@@ -13,18 +13,18 @@ export default function ParetoMatrixChart() {
     switch (model.id) {
       case 'claude-sonnet-4-6': return 99;
       case 'claude-3-7-sonnet': return 98;
-      case 'gemini-2-5-pro': return 97;
+      case 'gemini-3-1-pro': return 97;
+      case 'gemini-3-8-flash': return 95;
       case 'o1': return 96;
       case 'grok-4-5': return 95;
       case 'deepseek-r1': return 94;
       case 'o3-mini': return 92;
       case 'gpt-4-1': return 93;
-      case 'deepseek-v3-2': return 90;
-      case 'grok-4-20': return 89;
-      case 'gemini-2-5-flash': return 88;
+      case 'deepseek-v3-2': return 91;
+      case 'grok-4-20': return 90;
+      case 'gemini-3-5-flash-lite': return 87;
       case 'claude-3-5-haiku': return 84;
       case 'gpt-4-1-mini': return 85;
-      case 'gemini-2-5-flash-lite': return 83;
       case 'llama-3-3-70b': return 86;
       case 'codestral': return 85;
       default: return 75;
