@@ -18,13 +18,33 @@ interface ComparePageProps {
 export const dynamicParams = true;
 
 function findModel(idOrSlug: string): AIModel | undefined {
-  const clean = idOrSlug.toLowerCase().trim();
-  return AI_MODELS.find(
+  const raw = idOrSlug.toLowerCase().trim();
+  const normalized = raw.replace(/\./g, '-');
+
+  // Direct match by ID, slug, or normalized dot replacement
+  const exact = AI_MODELS.find(
     (m) =>
-      m.id.toLowerCase() === clean ||
-      m.slug.toLowerCase() === clean ||
-      m.id.replace(/-/g, '') === clean.replace(/-/g, '')
+      m.id.toLowerCase() === raw ||
+      m.slug.toLowerCase() === raw ||
+      m.id.toLowerCase() === normalized ||
+      m.slug.toLowerCase() === normalized ||
+      m.id.replace(/-/g, '') === raw.replace(/[-.]/g, '')
   );
+  if (exact) return exact;
+
+  // Prefix matching e.g. "gemini-3-8" or "gemini-3.8" matches "gemini-3-8-flash"
+  const prefix = AI_MODELS.find(
+    (m) => m.id.toLowerCase().startsWith(normalized) || m.slug.toLowerCase().startsWith(normalized)
+  );
+  if (prefix) return prefix;
+
+  // Substring matching
+  const includes = AI_MODELS.find(
+    (m) => m.id.toLowerCase().includes(normalized) || normalized.includes(m.id.toLowerCase())
+  );
+  if (includes) return includes;
+
+  return undefined;
 }
 
 function resolveComparison(slug: string): {

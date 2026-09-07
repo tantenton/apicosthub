@@ -4,9 +4,10 @@ import React, { useState, useMemo } from 'react';
 import { AI_MODELS, AIModel } from '../data/models';
 import { calculateWorkloadCost, formatCurrency } from '../lib/calculator';
 import { getProviderLogo } from './ProviderLogos';
-import { ArrowRightLeft, TrendingDown, Zap, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ArrowRightLeft, TrendingDown, Zap, CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AnimatedCounter from './AnimatedCounter';
+import Link from 'next/link';
 
 interface HeadToHeadCalculatorProps {
   initialModelA?: string;
@@ -181,18 +182,28 @@ export default function HeadToHeadCalculator({
             </div>
           </div>
 
-          <div className="text-right">
-            <div className="font-mono text-xl font-extrabold text-indigo-950">
-              {deltaMonthly >= 0 ? (
-                <span className="text-emerald-600">
-                  Save <AnimatedCounter value={deltaMonthly} prefix="$" decimals={2} /> / mo ({percentSavings.toFixed(1)}%)
-                </span>
-              ) : (
-                <span className="text-rose-600">
-                  +<AnimatedCounter value={Math.abs(deltaMonthly)} prefix="$" decimals={2} /> / mo ({Math.abs(percentSavings).toFixed(1)}% more)
-                </span>
-              )}
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="text-right">
+              <div className="font-mono text-xl font-extrabold text-indigo-950">
+                {deltaMonthly >= 0 ? (
+                  <span className="text-emerald-600">
+                    Save <AnimatedCounter value={deltaMonthly} prefix="$" decimals={2} /> / mo ({percentSavings.toFixed(1)}%)
+                  </span>
+                ) : (
+                  <span className="text-rose-600">
+                    +<AnimatedCounter value={Math.abs(deltaMonthly)} prefix="$" decimals={2} /> / mo ({Math.abs(percentSavings).toFixed(1)}% more)
+                  </span>
+                )}
+              </div>
             </div>
+
+            <Link
+              href={`/compare/${modelA.slug}-vs-${modelB.slug}`}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-indigo-200 hover:border-indigo-400 hover:text-indigo-600 text-xs font-bold text-slate-700 shadow-sm transition-all whitespace-nowrap"
+            >
+              <span>Full Deep-Dive</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
       </div>

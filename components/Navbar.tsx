@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calculator, BarChart3, Cpu, Sparkles, Menu, X, ArrowUpRight } from 'lucide-react';
+import { Calculator, BarChart3, Cpu, Sparkles, Menu, X, ArrowUpRight, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
@@ -12,6 +12,7 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/', label: 'Workbench', icon: Calculator },
+    { href: '/compare', label: 'Compare Arena', icon: Zap },
     { href: '/#pareto', label: 'Pareto Matrix', icon: BarChart3 },
     { href: '/calculator/gpu-vs-api', label: 'GPU Arbitrage', icon: Cpu },
     { href: '/pricing-table', label: 'All Models', icon: Sparkles },
