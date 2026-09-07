@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import AnimatedCounter from './AnimatedCounter';
 
 export default function RouterCascadeSimulator() {
-  const [tier1Id, setTier1Id] = useState<string>('gemini-1-5-flash');
+  const [tier1Id, setTier1Id] = useState<string>('gemini-2-0-flash');
   const [tier2Id, setTier2Id] = useState<string>('deepseek-v3');
   const [tier3Id, setTier3Id] = useState<string>('claude-3-5-sonnet');
 

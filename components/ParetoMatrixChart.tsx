@@ -11,7 +11,8 @@ export default function ParetoMatrixChart() {
   // Quality score estimation (MMLU-Pro / Arena ELO proxy)
   const getQualityScore = (model: AIModel): number => {
     switch (model.id) {
-      case 'o1': return 98;
+      case 'claude-3-7-sonnet': return 98;
+      case 'o1': return 96;
       case 'o3-mini': return 92;
       case 'claude-3-5-sonnet': return 95;
       case 'claude-3-5-haiku': return 84;
@@ -19,8 +20,9 @@ export default function ParetoMatrixChart() {
       case 'deepseek-v3': return 88;
       case 'gpt-4o': return 91;
       case 'gpt-4o-mini': return 82;
-      case 'gemini-1-5-pro': return 89;
-      case 'gemini-1-5-flash': return 80;
+      case 'gemini-2-0-pro': return 93;
+      case 'gemini-2-0-flash': return 86;
+      case 'gemini-2-0-flash-lite': return 82;
       case 'llama-3-3-70b': return 86;
       case 'mistral-large': return 85;
       default: return 75;
@@ -108,7 +110,7 @@ export default function ParetoMatrixChart() {
               // Normalized Y (linear for score 75 to 100)
               const topPercent = Math.min(92, Math.max(8, 100 - ((score - minScore) / (maxScore - minScore)) * 100));
 
-              const isSweetSpot = model.id === 'deepseek-v3' || model.id === 'gemini-1-5-flash' || model.id === 'deepseek-r1';
+              const isSweetSpot = model.id === 'deepseek-v3' || model.id === 'gemini-2-0-flash' || model.id === 'deepseek-r1';
 
               return (
                 <div
