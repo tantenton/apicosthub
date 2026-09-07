@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { AI_MODELS, AIModel } from '@/data/models';
+import { ProviderIcon } from './ProviderLogos';
 import {
   calculateAllModelsCost,
   CalculationParams,
@@ -509,19 +510,20 @@ export default function HeroCalculator() {
               </div>
 
               {/* Provider Buttons */}
-              <div className="flex items-center gap-1 overflow-x-auto text-[11px] font-mono">
+              <div className="flex items-center gap-1.5 overflow-x-auto text-[11px] font-mono">
                 {['All', 'OpenAI', 'Anthropic', 'Google', 'DeepSeek', 'Meta (Hosted)', 'Mistral'].map(
                   (p) => (
                     <button
                       key={p}
                       onClick={() => setSelectedProvider(p)}
-                      className={`px-2.5 py-1 rounded-md transition-all whitespace-nowrap ${
+                      className={`px-2.5 py-1 rounded-md transition-all whitespace-nowrap flex items-center gap-1.5 ${
                         selectedProvider === p
                           ? 'bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/40 font-bold'
-                          : 'text-[#94A3B8] hover:text-white bg-[#141A26]/50'
+                          : 'text-[#94A3B8] hover:text-white bg-[#141A26]/50 border border-transparent'
                       }`}
                     >
-                      {p}
+                      {p !== 'All' && <ProviderIcon provider={p} className="w-3 h-3" />}
+                      <span>{p}</span>
                     </button>
                   )
                 )}
@@ -559,6 +561,9 @@ export default function HeroCalculator() {
                             <span className="text-[11px] text-[#475569] w-4 text-right">
                               {idx + 1}
                             </span>
+                            <div className="p-1 rounded bg-[#171E2E] border border-[#232D42]">
+                              <ProviderIcon provider={model.provider} className="w-4 h-4" />
+                            </div>
                             <div>
                               <Link
                                 href={`/model/${model.id}`}
@@ -571,7 +576,11 @@ export default function HeroCalculator() {
                                   </span>
                                 )}
                               </Link>
-                              <div className="text-[10px] text-[#64748B]">{model.qualityTier} Tier</div>
+                              <div className="text-[10px] text-[#64748B] flex items-center gap-1.5">
+                                <span>{model.qualityTier} Tier</span>
+                                <span>·</span>
+                                <span>{model.latencyScore}</span>
+                              </div>
                             </div>
                           </div>
                         </td>

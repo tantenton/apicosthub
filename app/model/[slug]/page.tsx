@@ -4,6 +4,7 @@ import { Metadata } from 'next';
 import { AI_MODELS } from '@/data/models';
 import HeadToHeadCalculator from '@/components/HeadToHeadCalculator';
 import AdPlacement from '@/components/AdPlacement';
+import { ProviderIcon } from '@/components/ProviderLogos';
 import Link from 'next/link';
 import { ArrowLeft, Terminal, Cpu, Zap, Shield, Sparkles } from 'lucide-react';
 import { formatContextWindow } from '@/lib/calculator';
@@ -67,8 +68,11 @@ export default function ModelPage({ params }: ModelPageProps) {
             Model Specification Index
           </div>
           <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
-            <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
-              {model.name}
+            <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight flex items-center gap-3">
+              <div className="p-1.5 rounded-lg bg-[#141A26] border border-[#232D42]">
+                <ProviderIcon provider={model.provider} className="w-6 h-6 text-emerald-400" />
+              </div>
+              <span>{model.name}</span>
             </h1>
             <span className="px-2.5 py-1 rounded bg-[#171E2E] border border-[#232D42] text-xs text-[#94A3B8]">
               {model.provider} · {model.qualityTier} Tier

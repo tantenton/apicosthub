@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import Image from 'next/image';
 import { GPU_INSTANCES, AI_MODELS } from '@/data/models';
 import {
-  calculateGpuBreakeven,
-  CalculationParams,
   formatUSD,
   formatNumber,
 } from '@/lib/calculator';
-import { Cpu, Server, TrendingUp, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
+import { NvidiaLogo, ProviderIcon } from './ProviderLogos';
+import { Cpu, Server, TrendingUp, AlertCircle, CheckCircle2, ArrowRight, Zap, Gauge } from 'lucide-react';
 
 export default function GpuVsApiSection() {
   const [selectedGpuId, setSelectedGpuId] = useState<string>('h100-sxm');
@@ -25,16 +25,15 @@ export default function GpuVsApiSection() {
     [selectedModelId]
   );
 
-  // GPU monthly cost = hourlyRate * 730 hours * gpuCount
-  const gpuMonthlyCost = gpu.hourlyRateUSD * 730 * gpuCount;
+  const gpuHourlyRate = gpu.hourlyRateUSD ?? gpu.hourlyRate;
+  const gpuMonthlyCost = gpuHourlyRate * 730 * gpuCount;
 
   // Real-world monthly token generation capacity based on utilization
   const monthlySecs = 730 * 3600;
   const theoreticalTokens = gpu.estimatedTokensPerSec * monthlySecs * gpuCount;
   const realisticMonthlyTokens = (theoreticalTokens * utilizationRate) / 100;
 
-  // Cost to generate realisticMonthlyTokens on Managed API
-  // Assuming 70% input tokens, 30% output tokens
+  // Cost to generate realisticMonthlyTokens on Managed API (70% in, 30% out)
   const inputTokens = realisticMonthlyTokens * 0.7;
   const outputTokens = realisticMonthlyTokens * 0.3;
   const apiEquivalentCost =
@@ -54,82 +53,124 @@ export default function GpuVsApiSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         
         {/* Section Header */}
-        <div className="mb-6 pb-4 border-b border-[#1E2638] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="mb-8 pb-4 border-b border-[#1E2638] flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 font-mono text-xs text-amber-400 font-semibold uppercase tracking-wider">
-              <Server className="w-4 h-4" />
-              Infrastructure Economics
+            <div className="flex items-center gap-2 font-mono text-xs text-emerald-400 font-semibold uppercase tracking-wider mb-1">
+              <Server className="w-4 h-4 text-emerald-400" />
+              <span>Hardware Infrastructure Arbitrage</span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold font-mono text-white mt-1">
-              Self-Hosted GPU vs Managed API Breakeven
+            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              Self-Hosted GPU vs. Managed Cloud API Simulator
             </h2>
+            <p className="text-xs text-[#94A3B8] mt-1 max-w-2xl">
+              Calculate exact volume thresholds where renting dedicated H100/A100 instances on RunPod, Lambda, or Vast.ai outperforms paying per token on OpenAI/Anthropic/Bedrock.
+            </p>
           </div>
-          <span className="text-xs font-mono text-[#64748B]">vLLM / TensorRT-LLM on RunPod/Lambda</span>
+
+          <div className="flex items-center gap-2 self-start md:self-auto font-mono text-[11px] text-[#94A3B8] bg-[#0E121B] px-3 py-1.5 rounded-lg border border-[#1E2638]">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            730 Operating Hours / Month
+          </div>
         </div>
 
+        {/* 2-Column Main Workbench */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          {/* Controls (6 cols) */}
-          <div className="lg:col-span-6 terminal-card rounded-xl p-5 space-y-4">
-            
-            {/* GPU Instance Picker */}
-            <div>
-              <label className="text-[10px] uppercase font-mono tracking-wider text-[#64748B] block mb-1">
-                Select Cloud GPU Hardware (RunPod / Lambda Labs)
-              </label>
-              <select
-                value={selectedGpuId}
-                onChange={(e) => setSelectedGpuId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-[#141A26] border border-[#232D42] font-mono text-xs text-white focus:outline-none focus:border-amber-400"
-              >
-                {GPU_INSTANCES.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name} ({g.vramGB}GB VRAM) — ${g.hourlyRateUSD}/hr (~{g.estimatedTokensPerSec} tok/s)
-                  </option>
-                ))}
-              </select>
+
+          {/* Left: Interactive Sliders & Hardware Selector */}
+          <div className="lg:col-span-7 bg-[#0E121B] rounded-xl border border-[#1E2638] p-5 sm:p-6 space-y-5 shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#1E2638] pb-3">
+              <span className="font-mono text-xs text-white font-semibold flex items-center gap-2">
+                <Cpu className="w-4 h-4 text-emerald-400" /> Hardware Configuration
+              </span>
+              <span className="text-[10px] font-mono text-[#64748B]">Config Matrix</span>
             </div>
 
-            {/* Target Open Model */}
+            {/* GPU Select */}
             <div>
-              <label className="text-[10px] uppercase font-mono tracking-wider text-[#64748B] block mb-1">
-                Equivalent Open Model (Hosting with vLLM)
+              <label className="block text-xs font-mono text-[#94A3B8] mb-1.5 flex items-center justify-between">
+                <span>Select Target GPU Cluster</span>
+                <span className="text-emerald-400 font-bold">${gpuHourlyRate.toFixed(2)}/hr</span>
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {GPU_INSTANCES.map((g) => {
+                  const rate = g.hourlyRateUSD ?? g.hourlyRate;
+                  const isSelected = g.id === selectedGpuId;
+                  return (
+                    <button
+                      key={g.id}
+                      onClick={() => setSelectedGpuId(g.id)}
+                      className={`p-3 rounded-lg border text-left font-mono transition-all ${
+                        isSelected
+                          ? 'bg-emerald-500/10 border-emerald-500/40 text-white'
+                          : 'bg-[#080A0F] border-[#1E2638] text-[#94A3B8] hover:border-[#334155]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                          <NvidiaLogo className="w-3.5 h-3.5 text-emerald-400" />
+                          {g.gpuName}
+                        </span>
+                        <span className="text-[10px] text-emerald-400">${rate.toFixed(2)}/h</span>
+                      </div>
+                      <div className="text-[10px] text-[#64748B] mt-1 flex justify-between">
+                        <span>{g.vramGB}GB VRAM</span>
+                        <span>{g.estimatedTokensPerSec} tok/s</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Number of GPUs */}
+            <div>
+              <div className="flex justify-between items-center text-xs font-mono mb-1.5">
+                <span className="text-[#94A3B8]">GPU Cluster Scale</span>
+                <span className="text-white font-bold">{gpuCount}x GPU Node</span>
+              </div>
+              <div className="grid grid-cols-4 gap-2 font-mono text-xs">
+                {[1, 2, 4, 8].map((count) => (
+                  <button
+                    key={count}
+                    onClick={() => setGpuCount(count)}
+                    className={`py-2 rounded border text-center transition-all ${
+                      gpuCount === count
+                        ? 'bg-[#1E2638] border-emerald-500 text-white font-bold'
+                        : 'bg-[#080A0F] border-[#1E2638] text-[#94A3B8] hover:text-white'
+                    }`}
+                  >
+                    {count}x ({count * gpu.vramGB}GB)
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Target Comparison Model */}
+            <div>
+              <label className="block text-xs font-mono text-[#94A3B8] mb-1.5 flex items-center justify-between">
+                <span>Compare Against Managed API Model</span>
+                <span className="text-white font-bold">{model.name}</span>
               </label>
               <select
                 value={selectedModelId}
                 onChange={(e) => setSelectedModelId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-[#141A26] border border-[#232D42] font-mono text-xs text-white focus:outline-none focus:border-amber-400"
+                className="w-full bg-[#080A0F] border border-[#1E2638] rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-emerald-500"
               >
-                {AI_MODELS.filter((m) => m.isOpenWeights).map((m) => (
+                {AI_MODELS.map((m) => (
                   <option key={m.id} value={m.id}>
-                    {m.name} (${m.inputCostPer1M} in / ${m.outputCostPer1M} out per 1M on Managed API)
+                    {m.name} ({m.provider}) — ${m.inputCostPer1M}/in, ${m.outputCostPer1M}/out
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Cluster Size */}
+            {/* Utilization Slider */}
             <div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs font-mono text-[#CBD5E1]">GPU Node Count</span>
-                <span className="font-mono text-xs font-bold text-white">{gpuCount} GPU(s)</span>
-              </div>
-              <input
-                type="range"
-                min={1}
-                max={8}
-                step={1}
-                value={gpuCount}
-                onChange={(e) => setGpuCount(Number(e.target.value))}
-                className="w-full cursor-pointer"
-              />
-            </div>
-
-            {/* Utilization Rate */}
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs font-mono text-[#CBD5E1]">Average Cluster Utilization</span>
-                <span className="font-mono text-xs font-bold text-amber-400">{utilizationRate}%</span>
+              <div className="flex justify-between items-center text-xs font-mono mb-1.5">
+                <span className="text-[#94A3B8] flex items-center gap-1">
+                  <Gauge className="w-3.5 h-3.5 text-emerald-400" /> GPU Utilization Rate
+                </span>
+                <span className="text-emerald-400 font-bold">{utilizationRate}% Capacity</span>
               </div>
               <input
                 type="range"
@@ -138,83 +179,91 @@ export default function GpuVsApiSection() {
                 step={5}
                 value={utilizationRate}
                 onChange={(e) => setUtilizationRate(Number(e.target.value))}
-                className="w-full cursor-pointer"
+                className="w-full accent-emerald-400 cursor-pointer h-1.5 bg-[#080A0F] rounded-lg"
               />
               <div className="flex justify-between text-[10px] font-mono text-[#475569] mt-1">
-                <span>10% (Burst/Dev)</span>
-                <span>50% (Production SRE)</span>
-                <span>90% (Saturated Batch)</span>
+                <span>10% (Sporadic Dev)</span>
+                <span>50% (Standard Prod)</span>
+                <span>95% (Continuous Batch)</span>
               </div>
+            </div>
+
+            {/* Estimated monthly output */}
+            <div className="p-3 bg-[#080A0F] rounded-lg border border-[#1E2638] font-mono text-xs flex justify-between items-center">
+              <span className="text-[#94A3B8]">Est. Monthly Token Output:</span>
+              <span className="text-white font-bold">{formatNumber(realisticMonthlyTokens)} tokens/mo</span>
             </div>
           </div>
 
-          {/* Verdict Dashboard (6 cols) */}
-          <div className="lg:col-span-6 space-y-4">
-            
+          {/* Right: Decision Matrix & 3D Hardware Visual */}
+          <div className="lg:col-span-5 flex flex-col gap-4">
+
+            {/* Visual Hardware Render from 9Router */}
+            <div className="relative h-44 rounded-xl border border-[#1E2638] overflow-hidden group">
+              <Image
+                src="/images/gpu-server.png"
+                alt="NVIDIA H100 GPU Cluster Data Center"
+                fill
+                className="object-cover object-center opacity-80 group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0E121B] via-transparent to-transparent pointer-events-none" />
+              <div className="absolute top-3 left-3 bg-[#080A0F]/90 backdrop-blur-md px-2.5 py-1 rounded border border-emerald-500/30 text-[10px] font-mono text-emerald-400 flex items-center gap-1.5">
+                <NvidiaLogo className="w-3.5 h-3.5" />
+                <span>RunPod / Lambda Serverless Fabric</span>
+              </div>
+            </div>
+
             {/* Verdict Card */}
             <div
-              className={`terminal-card rounded-xl p-5 border-l-4 ${
-                isGpuCheaper ? 'border-l-emerald-400' : 'border-l-blue-400'
+              className={`p-5 rounded-xl border font-mono shadow-xl transition-all ${
+                isGpuCheaper
+                  ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300'
+                  : 'bg-amber-950/20 border-amber-500/40 text-amber-300'
               }`}
             >
-              <div className="text-[11px] font-mono uppercase tracking-wider text-[#64748B]">
-                Infrastructure Verdict at {utilizationRate}% Utilization
-              </div>
-              
-              <div className="text-lg sm:text-xl font-mono font-bold text-white mt-1">
+              <div className="flex items-center gap-2 mb-2 font-bold text-sm">
                 {isGpuCheaper ? (
-                  <span className="text-emerald-400">
-                    Self-Hosted GPU is {formatUSD(monthlySavings)}/mo Cheaper
-                  </span>
+                  <>
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                    <span>VERDICT: SELF-HOSTING GPU IS CHEAPER</span>
+                  </>
                 ) : (
-                  <span className="text-blue-400">
-                    Managed API is {formatUSD(monthlySavings)}/mo Cheaper
-                  </span>
+                  <>
+                    <AlertCircle className="w-5 h-5 text-amber-400" />
+                    <span>VERDICT: MANAGED API IS CHEAPER</span>
+                  </>
                 )}
               </div>
 
-              <p className="text-xs text-[#94A3B8] mt-2 font-mono">
-                {isGpuCheaper
-                  ? `Your sustained volume justifies running ${gpuCount}x ${gpu.name}. Rented instances beat managed provider token billing.`
-                  : `At ${utilizationRate}% utilization, server idle time eats your margins. Stick with Managed API until volume surpasses breakeven.`}
-              </p>
-            </div>
-
-            {/* Side-by-Side Cost Numbers */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="terminal-card rounded-xl p-4">
-                <div className="text-[11px] font-mono text-[#64748B]">GPU Server Cost</div>
-                <div className="text-xl font-bold font-mono text-white mt-1">
-                  {formatUSD(gpuMonthlyCost)}
+              <div className="text-xs text-[#CBD5E1] space-y-1.5 my-3">
+                <div className="flex justify-between py-1 border-b border-[#1E2638]">
+                  <span>GPU Cluster Invoice:</span>
+                  <span className="font-bold text-white">{formatUSD(gpuMonthlyCost)}/mo</span>
                 </div>
-                <div className="text-[10px] font-mono text-[#64748B] mt-0.5">
-                  ${gpu.hourlyRateUSD}/hr · 730 hrs/mo
+                <div className="flex justify-between py-1 border-b border-[#1E2638]">
+                  <span>API Equivalent Cost:</span>
+                  <span className="font-bold text-white">{formatUSD(apiEquivalentCost)}/mo</span>
+                </div>
+                <div className="flex justify-between py-1 font-bold">
+                  <span>Net Monthly Arbitrage:</span>
+                  <span className={isGpuCheaper ? 'text-emerald-400' : 'text-amber-400'}>
+                    {isGpuCheaper ? `Save ${formatUSD(monthlySavings)}/mo` : `API is cheaper by ${formatUSD(monthlySavings)}/mo`}
+                  </span>
                 </div>
               </div>
 
-              <div className="terminal-card rounded-xl p-4">
-                <div className="text-[11px] font-mono text-[#64748B]">Managed API Equivalent</div>
-                <div className="text-xl font-bold font-mono text-white mt-1">
-                  {formatUSD(apiEquivalentCost)}
-                </div>
-                <div className="text-[10px] font-mono text-[#64748B] mt-0.5">
-                  {(realisticMonthlyTokens / 1_000_000).toFixed(1)}M tokens produced
-                </div>
+              {/* Breakeven Threshold */}
+              <div className="mt-4 pt-3 border-t border-[#1E2638] text-[11px] leading-relaxed">
+                <span className="text-[#64748B] block mb-1">Breakeven Crossover Point:</span>
+                <p className="text-white">
+                  You need at least <strong>{formatNumber(breakevenTokensDay)} tokens/day</strong> ({formatNumber(breakevenTokensMonth)}/mo) for dedicated GPU hardware to break even against {model.name}.
+                </p>
               </div>
             </div>
 
-            {/* Breakeven Rule of Thumb */}
-            <div className="p-3.5 rounded-lg bg-[#141A26] border border-[#232D42] text-xs font-mono text-[#CBD5E1] flex items-center justify-between">
-              <div>
-                <span className="text-[#64748B]">Breakeven Daily Volume: </span>
-                <strong className="text-white">
-                  {(breakevenTokensDay / 1_000_000).toFixed(2)}M tokens/day
-                </strong>
-              </div>
-              <span className="text-[11px] text-amber-400">Threshold Point</span>
-            </div>
           </div>
         </div>
+
       </div>
     </section>
   );

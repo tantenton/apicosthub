@@ -4,6 +4,7 @@ import { Metadata } from 'next';
 import { POPULAR_COMPARISONS, AI_MODELS, PopularComparisonPair } from '@/data/models';
 import HeadToHeadCalculator from '@/components/HeadToHeadCalculator';
 import AdPlacement from '@/components/AdPlacement';
+import { ProviderIcon } from '@/components/ProviderLogos';
 import Link from 'next/link';
 import { ArrowLeft, GitCompare, Zap, Shield, Sparkles, Terminal } from 'lucide-react';
 import { formatContextWindow } from '@/lib/calculator';
@@ -66,9 +67,16 @@ export default function ComparePage({ params }: ComparePageProps) {
 
         {/* Top Header */}
         <div className="mb-8 pb-6 border-b border-[#1E2638]">
-          <div className="flex items-center gap-2 text-xs text-[#10B981] font-semibold uppercase tracking-wider mb-2">
-            <Terminal className="w-4 h-4" />
-            Direct Model Diff & Benchmark Analysis
+          <div className="flex items-center gap-3 text-xs text-[#10B981] font-semibold uppercase tracking-wider mb-3">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#141A26] border border-[#232D42]">
+              <ProviderIcon provider={modelA.provider} className="w-3.5 h-3.5" />
+              <span>{modelA.name}</span>
+            </div>
+            <span className="text-[#64748B]">vs</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#141A26] border border-[#232D42]">
+              <ProviderIcon provider={modelB.provider} className="w-3.5 h-3.5" />
+              <span>{modelB.name}</span>
+            </div>
           </div>
           <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">
             {comparison.title}

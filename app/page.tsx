@@ -1,5 +1,7 @@
 import React from 'react';
 import HeroCalculator from '@/components/HeroCalculator';
+import ParetoMatrixChart from '@/components/ParetoMatrixChart';
+import ArchitectureBanner from '@/components/ArchitectureBanner';
 import HeadToHeadCalculator from '@/components/HeadToHeadCalculator';
 import GpuVsApiSection from '@/components/GpuVsApiSection';
 import FormulaDocs from '@/components/FormulaDocs';
@@ -17,9 +19,19 @@ export default function Home() {
       {/* Main Interactive Tokenomics Workbench */}
       <HeroCalculator />
 
+      {/* 2D Pareto Frontier Matrix: Artificial Analysis Style */}
+      <div className="w-full max-w-7xl px-4 sm:px-6">
+        <ParetoMatrixChart />
+      </div>
+
       {/* Mid Sponsor / Ad Placement */}
       <div className="w-full max-w-7xl px-4 sm:px-6">
         <AdPlacement slotId="mid-feed-sponsor" format="horizontal-leaderboard" />
+      </div>
+
+      {/* 3D Production Architecture Breakdown */}
+      <div className="w-full max-w-7xl px-4 sm:px-6">
+        <ArchitectureBanner />
       </div>
 
       {/* Model Diff / Head-to-Head Comparison */}
