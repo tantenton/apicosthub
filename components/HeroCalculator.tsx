@@ -35,7 +35,7 @@ import AnimatedCounter from './AnimatedCounter';
 
 type ViewMode = 'economics' | 'benchmarks' | 'multihost' | 'canvas';
 type FilterTag = 'all' | 'reasoning' | 'vision' | 'coding' | 'fast' | 'long-context' | 'open-weights';
-type SortField = 'monthlyCost' | 'name' | 'inputPer1M' | 'outputPer1M' | 'tokensPerSec' | 'sweBench' | 'mmluPro' | 'arenaElo' | 'efficiency';
+type SortField = 'monthlyCost' | 'name' | 'inputPer1M' | 'outputPer1M' | 'tokensPerSec' | 'sweBench' | 'mmluPro' | 'arenaElo' | 'gpqaDiamond' | 'efficiency';
 type SortOrder = 'asc' | 'desc';
 
 export default function HeroCalculator() {
@@ -137,6 +137,9 @@ export default function HeroCalculator() {
         } else if (sortField === 'arenaElo') {
           valA = a.model.benchmarks?.arenaElo || 0;
           valB = b.model.benchmarks?.arenaElo || 0;
+        } else if (sortField === 'gpqaDiamond') {
+          valA = a.model.benchmarks?.gpqaDiamond || 0;
+          valB = b.model.benchmarks?.gpqaDiamond || 0;
         } else if (sortField === 'efficiency') {
           valA = a.efficiencyScore;
           valB = b.efficiencyScore;
@@ -155,7 +158,7 @@ export default function HeroCalculator() {
     } else {
       setSortField(field);
       // For benchmarks, default to desc (highest score first)
-      if (['sweBench', 'mmluPro', 'arenaElo', 'efficiency', 'tokensPerSec'].includes(field)) {
+      if (['sweBench', 'mmluPro', 'arenaElo', 'gpqaDiamond', 'efficiency', 'tokensPerSec'].includes(field)) {
         setSortOrder('desc');
       } else {
         setSortOrder('asc');
@@ -509,8 +512,11 @@ export default function HeroCalculator() {
                       <ArrowUpDown className="w-3 h-3 text-slate-400" />
                     </div>
                   </th>
-                  <th className="py-3 px-4 hidden md:table-cell">
-                    <span>GPQA DIAMOND</span>
+                  <th onClick={() => handleSort('gpqaDiamond')} className="py-3 px-4 cursor-pointer hover:text-indigo-600 transition-colors hidden md:table-cell">
+                    <div className="flex items-center gap-1.5">
+                      <span>GPQA DIAMOND</span>
+                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                    </div>
                   </th>
                   <th onClick={() => handleSort('efficiency')} className="py-3 px-4 cursor-pointer hover:text-indigo-600 transition-colors">
                     <div className="flex items-center gap-1.5">
@@ -597,8 +603,18 @@ export default function HeroCalculator() {
                       </td>
 
                       {/* GPQA Diamond */}
-                      <td className="py-3.5 px-4 font-mono text-slate-700 hidden md:table-cell">
-                        {b?.gpqaDiamond ? `${b.gpqaDiamond.toFixed(1)}%` : 'N/A'}
+                      <td className="py-3.5 px-4 hidden md:table-cell">
+                        <div className="font-mono font-bold text-slate-800 text-xs">
+                          {b?.gpqaDiamond ? `${b.gpqaDiamond.toFixed(1)}%` : 'N/A'}
+                        </div>
+                        {b?.gpqaDiamond && (
+                          <div className="w-16 bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1">
+                            <div
+                              style={{ width: `${Math.min(100, (b.gpqaDiamond / 90) * 100)}%` }}
+                              className="bg-amber-500 h-full rounded-full"
+                            />
+                          </div>
+                        )}
                       </td>
 
                       {/* Elo / $ Ratio */}
@@ -691,41 +707,59 @@ export default function HeroCalculator() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50 font-mono">
-                          {model.hostingQuotes?.map((quote) => (
-                            <tr key={quote.providerName} className="hover:bg-slate-50/80">
-                              <td className="py-2.5 px-3 font-sans font-semibold text-slate-900 flex items-center gap-1.5">
-                                <span>{quote.providerName}</span>
-                                {quote.isRecommended && (
-                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                    TOP VALUE
+                          {model.hostingQuotes?.map((quote) => {
+                            const isFastest = quote.speedTokensPerSec >= 350;
+                            const isCheapest = quote.inputPricePerMillion < model.inputPricePerMillion;
+                            const isOfficial = quote.providerSlug === model.providerSlug;
+
+                            return (
+                              <tr key={quote.providerName} className="hover:bg-slate-50/80">
+                                <td className="py-2.5 px-3 font-sans font-semibold text-slate-900 flex items-center gap-1.5">
+                                  <span>{quote.providerName}</span>
+                                  {isOfficial && (
+                                    <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                      OFFICIAL
+                                    </span>
+                                  )}
+                                  {isFastest && (
+                                    <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                                      FASTEST LPU
+                                    </span>
+                                  )}
+                                  {isCheapest && (
+                                    <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                      LOWEST PRICE
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="py-2.5 px-3 text-slate-900 font-bold">
+                                  ${quote.inputPricePerMillion.toFixed(2)}
+                                </td>
+                                <td className="py-2.5 px-3 text-slate-900 font-bold">
+                                  ${quote.outputPricePerMillion.toFixed(2)}
+                                </td>
+                                <td className="py-2.5 px-3 text-indigo-600 font-bold">
+                                  ~{quote.speedTokensPerSec} t/s
+                                </td>
+                                <td className="py-2.5 px-3 text-slate-600">
+                                  {quote.ttftMedianMs}ms
+                                </td>
+                                <td className="py-2.5 px-3">
+                                  <span className={quote.uptime90d >= 99.95 ? 'text-emerald-600 font-semibold' : 'text-amber-600 font-semibold'}>
+                                    {quote.uptime90d}%
                                   </span>
-                                )}
-                              </td>
-                              <td className="py-2.5 px-3 text-slate-900 font-bold">
-                                ${quote.inputPricePerMillion.toFixed(2)}
-                              </td>
-                              <td className="py-2.5 px-3 text-slate-900 font-bold">
-                                ${quote.outputPricePerMillion.toFixed(2)}
-                              </td>
-                              <td className="py-2.5 px-3 text-indigo-600 font-bold">
-                                ~{quote.speedTokensPerSec} t/s
-                              </td>
-                              <td className="py-2.5 px-3 text-slate-600">
-                                {quote.ttftMedianMs}ms
-                              </td>
-                              <td className="py-2.5 px-3 text-emerald-600 font-semibold">
-                                {quote.uptime90d}%
-                              </td>
-                              <td className="py-2.5 px-3 text-right">
-                                <Link
-                                  href={`/compare/${model.slug}-vs-${quote.providerSlug}`}
-                                  className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800"
-                                >
-                                  Benchmark
-                                </Link>
-                              </td>
-                            </tr>
-                          ))}
+                                </td>
+                                <td className="py-2.5 px-3 text-right">
+                                  <Link
+                                    href={`/compare/${model.slug}-vs-${quote.providerSlug}`}
+                                    className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800"
+                                  >
+                                    Benchmark
+                                  </Link>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
