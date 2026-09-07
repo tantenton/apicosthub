@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { AI_MODELS, AIModel } from '@/data/models';
 import { ProviderIcon } from './ProviderLogos';
+import TokenFlowCanvas from './TokenFlowCanvas';
 import {
   calculateAllModelsCost,
   CalculationParams,
@@ -20,6 +21,9 @@ import {
   Search,
   ArrowUpDown,
   RotateCcw,
+  Activity,
+  ChevronRight,
+  TrendingDown,
 } from 'lucide-react';
 
 const WORKLOAD_PRESETS = [
@@ -78,7 +82,7 @@ const WORKLOAD_PRESETS = [
 type SortKey = 'cost' | 'name' | 'provider' | 'input' | 'output';
 
 export default function HeroCalculator() {
-  const [activeTab, setActiveTab] = useState<'matrix' | 'sandbox'>('matrix');
+  const [activeTab, setActiveTab] = useState<'matrix' | 'simulator' | 'sandbox'>('matrix');
 
   // Parameters
   const [monthlyRequests, setMonthlyRequests] = useState<number>(500_000);
@@ -181,52 +185,63 @@ export default function HeroCalculator() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         
         {/* Header */}
-        <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#1E2538] pb-6">
+        <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-2 py-0.5 rounded text-xs font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
                 TOKENOMICS CALCULATOR
               </span>
-              <span className="text-xs text-[#94A3B8]">Verified September 2026</span>
+              <span className="text-xs text-slate-400">Verified September 2026</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+            <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">
               LLM API Pricing & Monthly Expense Calculator
             </h1>
-            <p className="text-sm text-[#94A3B8] mt-1 max-w-2xl leading-relaxed">
+            <p className="text-sm text-slate-400 mt-1 max-w-2xl leading-relaxed">
               Model token expenditure across frontier providers with prompt caching discounts, asynchronous batch rates, and context size specifications.
             </p>
           </div>
 
           {/* Workbench Tabs */}
-          <div className="flex items-center gap-1 p-1 rounded-lg bg-[#111520] border border-[#1E2538] self-start md:self-auto text-xs font-medium">
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/10 self-start md:self-auto text-xs font-medium">
             <button
               onClick={() => setActiveTab('matrix')}
-              className={`px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors ${
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors ${
                 activeTab === 'matrix'
-                  ? 'bg-[#1C2333] text-white border border-[#2D3952] font-semibold'
-                  : 'text-[#94A3B8] hover:text-white'
+                  ? 'bg-indigo-600 text-white font-semibold shadow-md'
+                  : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Layers className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Model Comparison</span>
+              <Layers className="w-3.5 h-3.5 text-white" />
+              <span>Model Matrix</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('simulator')}
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors ${
+                activeTab === 'simulator'
+                  ? 'bg-indigo-600 text-white font-semibold shadow-md'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Activity className="w-3.5 h-3.5 text-white" />
+              <span>Live Flow Canvas</span>
             </button>
             <button
               onClick={() => setActiveTab('sandbox')}
-              className={`px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors ${
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors ${
                 activeTab === 'sandbox'
-                  ? 'bg-[#1C2333] text-white border border-[#2D3952] font-semibold'
-                  : 'text-[#94A3B8] hover:text-white'
+                  ? 'bg-indigo-600 text-white font-semibold shadow-md'
+                  : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Code2 className="w-3.5 h-3.5 text-blue-400" />
-              <span>Prompt Tokenizer</span>
+              <Code2 className="w-3.5 h-3.5 text-white" />
+              <span>Tokenizer</span>
             </button>
           </div>
         </div>
 
         {/* Workload Presets */}
         <div className="mb-6">
-          <div className="text-xs text-[#94A3B8] mb-2 font-medium">
+          <div className="text-xs text-slate-400 mb-2 font-medium">
             Reference Workload Scenarios:
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
@@ -239,17 +254,17 @@ export default function HeroCalculator() {
                 <button
                   key={preset.id}
                   onClick={() => handleApplyPreset(preset)}
-                  className={`p-3 rounded-lg text-left transition-colors border min-h-[44px] ${
+                  className={`p-3 rounded-xl text-left transition-all border min-h-[44px] ${
                     isActive
-                      ? 'bg-emerald-500/10 border-emerald-500/40 text-white'
-                      : 'bg-[#111520] border-[#1E2538] text-[#94A3B8] hover:border-[#2D3952] hover:text-white'
+                      ? 'bg-indigo-600/15 border-indigo-500/50 text-white shadow-sm'
+                      : 'bg-white/[0.02] border-white/5 text-slate-400 hover:border-white/20 hover:text-white'
                   }`}
                 >
                   <div className="text-xs font-semibold text-white flex items-center justify-between">
                     <span>{preset.name}</span>
-                    {isActive && <Check className="w-3.5 h-3.5 text-emerald-400" />}
+                    {isActive && <Check className="w-3.5 h-3.5 text-indigo-400" />}
                   </div>
-                  <div className="text-[11px] text-[#64748B] truncate mt-1">
+                  <div className="text-xs text-slate-500 truncate mt-1">
                     {preset.desc}
                   </div>
                 </button>
@@ -262,19 +277,19 @@ export default function HeroCalculator() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
           
           {/* Sliders Column */}
-          <div className="lg:col-span-7 surface-card rounded-xl p-5 space-y-5 shadow-sm">
-            <div className="flex items-center justify-between border-b border-[#1E2538] pb-3">
+          <div className="lg:col-span-7 surface-card rounded-2xl p-5 space-y-5 shadow-xl">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2 text-xs font-semibold text-white uppercase tracking-wider">
-                <Sliders className="w-4 h-4 text-emerald-400" />
+                <Sliders className="w-4 h-4 text-indigo-400" />
                 Workload Parameters
               </div>
-              <span className="text-xs text-[#64748B]">Adjust sliders or type values</span>
+              <span className="text-xs text-slate-500">Real-time dynamic adjustment</span>
             </div>
 
             {/* Dial 1: Monthly Requests */}
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label className="text-xs font-medium text-[#CBD5E1]">
+                <label className="text-xs font-medium text-slate-300">
                   Monthly API Invocations
                 </label>
                 <div className="flex items-center gap-1.5 font-mono">
@@ -285,9 +300,9 @@ export default function HeroCalculator() {
                     step={10000}
                     value={monthlyRequests}
                     onChange={(e) => setMonthlyRequests(Number(e.target.value))}
-                    className="w-28 px-2 py-1 rounded bg-[#090B10] border border-[#1E2538] text-right text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-28 px-2.5 py-1 rounded-lg bg-[#08090a] border border-white/10 text-right text-xs text-white focus:outline-none focus:border-indigo-500"
                   />
-                  <span className="text-xs text-[#64748B]">calls</span>
+                  <span className="text-xs text-slate-500">calls</span>
                 </div>
               </div>
               <input
@@ -299,7 +314,7 @@ export default function HeroCalculator() {
                 onChange={(e) => setMonthlyRequests(Number(e.target.value))}
                 className="w-full cursor-pointer"
               />
-              <div className="flex justify-between text-[11px] font-mono text-[#64748B] mt-1">
+              <div className="flex justify-between text-xs font-mono text-slate-500 mt-1">
                 <span>10K</span>
                 <span>1M</span>
                 <span>5M</span>
@@ -310,7 +325,7 @@ export default function HeroCalculator() {
             {/* Dial 2: Input Tokens */}
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label className="text-xs font-medium text-[#CBD5E1]">
+                <label className="text-xs font-medium text-slate-300">
                   Input Tokens per Call (System Context + User Prompt)
                 </label>
                 <div className="flex items-center gap-1.5 font-mono">
@@ -321,9 +336,9 @@ export default function HeroCalculator() {
                     step={100}
                     value={avgInputTokens}
                     onChange={(e) => setAvgInputTokens(Number(e.target.value))}
-                    className="w-24 px-2 py-1 rounded bg-[#090B10] border border-[#1E2538] text-right text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-24 px-2.5 py-1 rounded-lg bg-[#08090a] border border-white/10 text-right text-xs text-white focus:outline-none focus:border-indigo-500"
                   />
-                  <span className="text-xs text-[#64748B]">tok</span>
+                  <span className="text-xs text-slate-500">tok</span>
                 </div>
               </div>
               <input
@@ -335,7 +350,7 @@ export default function HeroCalculator() {
                 onChange={(e) => setAvgInputTokens(Number(e.target.value))}
                 className="w-full cursor-pointer"
               />
-              <div className="flex justify-between text-[11px] font-mono text-[#64748B] mt-1">
+              <div className="flex justify-between text-xs font-mono text-slate-500 mt-1">
                 <span>100 (Short)</span>
                 <span>2,000 (Chat)</span>
                 <span>16,000 (Doc)</span>
@@ -346,7 +361,7 @@ export default function HeroCalculator() {
             {/* Dial 3: Output Tokens */}
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label className="text-xs font-medium text-[#CBD5E1]">
+                <label className="text-xs font-medium text-slate-300">
                   Output Tokens per Call (Generated Content)
                 </label>
                 <div className="flex items-center gap-1.5 font-mono">
@@ -357,9 +372,9 @@ export default function HeroCalculator() {
                     step={50}
                     value={avgOutputTokens}
                     onChange={(e) => setAvgOutputTokens(Number(e.target.value))}
-                    className="w-24 px-2 py-1 rounded bg-[#090B10] border border-[#1E2538] text-right text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-24 px-2.5 py-1 rounded-lg bg-[#08090a] border border-white/10 text-right text-xs text-white focus:outline-none focus:border-indigo-500"
                   />
-                  <span className="text-xs text-[#64748B]">tok</span>
+                  <span className="text-xs text-slate-500">tok</span>
                 </div>
               </div>
               <input
@@ -371,7 +386,7 @@ export default function HeroCalculator() {
                 onChange={(e) => setAvgOutputTokens(Number(e.target.value))}
                 className="w-full cursor-pointer"
               />
-              <div className="flex justify-between text-[11px] font-mono text-[#64748B] mt-1">
+              <div className="flex justify-between text-xs font-mono text-slate-500 mt-1">
                 <span>50 (JSON)</span>
                 <span>500 (Standard)</span>
                 <span>2,000 (Code)</span>
@@ -380,11 +395,11 @@ export default function HeroCalculator() {
             </div>
 
             {/* Advanced Controls */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-[#1E2538]">
-              <div className="bg-[#090B10] p-3.5 rounded-lg border border-[#1E2538]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-white/10">
+              <div className="bg-[#08090a] p-3.5 rounded-xl border border-white/10">
                 <div className="flex justify-between items-center mb-1.5">
                   <span className="text-xs font-medium text-white">Prompt Caching Hit Rate</span>
-                  <span className="font-mono text-xs font-bold text-emerald-400">
+                  <span className="font-mono text-xs font-bold text-cyan-400">
                     {cachedPercentage}%
                   </span>
                 </div>
@@ -397,30 +412,30 @@ export default function HeroCalculator() {
                   onChange={(e) => setCachedPercentage(Number(e.target.value))}
                   className="w-full cursor-pointer"
                 />
-                <span className="text-[11px] text-[#64748B] block mt-1 leading-normal">
+                <span className="text-xs text-slate-500 block mt-1 leading-normal">
                   Reduces input token billing by 50% to 90% for repeated prefix contexts.
                 </span>
               </div>
 
               <div
                 onClick={() => setBatchEnabled(!batchEnabled)}
-                className={`p-3.5 rounded-lg border cursor-pointer transition-colors flex flex-col justify-between ${
+                className={`p-3.5 rounded-xl border cursor-pointer transition-colors flex flex-col justify-between ${
                   batchEnabled
-                    ? 'bg-emerald-500/10 border-emerald-500/40'
-                    : 'bg-[#090B10] border-[#1E2538] hover:border-[#2D3952]'
+                    ? 'bg-indigo-500/10 border-indigo-500/40'
+                    : 'bg-[#08090a] border-white/10 hover:border-white/20'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-white">Batch API (Asynchronous)</span>
                   <span
-                    className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
-                      batchEnabled ? 'bg-emerald-500 text-black' : 'bg-[#1E2538] text-[#94A3B8]'
+                    className={`text-xs font-mono px-2 py-0.5 rounded-md font-bold ${
+                      batchEnabled ? 'bg-indigo-600 text-white' : 'bg-white/10 text-slate-400'
                     }`}
                   >
                     {batchEnabled ? '50% DISCOUNT' : 'STANDARD'}
                   </span>
                 </div>
-                <span className="text-[11px] text-[#64748B] mt-1 leading-normal">
+                <span className="text-xs text-slate-500 mt-1 leading-normal">
                   Calculates 50% off-peak discount for 24-hour turnaround background jobs.
                 </span>
               </div>
@@ -431,26 +446,26 @@ export default function HeroCalculator() {
           <div className="lg:col-span-5 space-y-4">
             
             {/* Projected Lowest Card */}
-            <div className="surface-card rounded-xl p-5 border-l-4 border-l-emerald-500">
-              <div className="text-xs uppercase tracking-wider text-[#94A3B8] font-medium flex items-center justify-between">
+            <div className="surface-card rounded-2xl p-5 border-l-4 border-l-indigo-500 glow-card">
+              <div className="text-xs uppercase tracking-wider text-slate-400 font-medium flex items-center justify-between">
                 <span>Lowest Monthly Projected Cost</span>
-                <span className="text-emerald-400 font-mono text-[11px]">OPTIMIZED</span>
+                <span className="text-indigo-400 font-mono text-xs">OPTIMIZED TIER</span>
               </div>
               
               <div className="mt-2 flex items-baseline gap-2 font-mono">
                 <span className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
                   {lowestCost ? formatUSD(lowestCost.totalMonthlyCost) : '$0'}
                 </span>
-                <span className="text-xs text-[#64748B]">/ month</span>
+                <span className="text-xs text-slate-500">/ month</span>
               </div>
 
               {lowestCost && (
-                <div className="mt-3 pt-3 border-t border-[#1E2538] flex items-center justify-between text-xs">
+                <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <ProviderIcon provider={lowestCost.model.provider} className="w-3.5 h-3.5" />
+                    <ProviderIcon provider={lowestCost.model.provider} className="w-4 h-4" />
                     <span className="font-semibold text-white">{lowestCost.model.name}</span>
                   </div>
-                  <span className="text-emerald-400 font-mono">
+                  <span className="text-indigo-400 font-mono">
                     {formatUSD(lowestCost.costPer1kRequests)} per 1K calls
                   </span>
                 </div>
@@ -459,38 +474,38 @@ export default function HeroCalculator() {
 
             {/* Metrics Breakdown Grid */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="surface-card rounded-xl p-4">
-                <div className="text-xs text-[#94A3B8]">Total Monthly Tokens</div>
+              <div className="surface-card rounded-2xl p-4">
+                <div className="text-xs text-slate-400">Total Monthly Tokens</div>
                 <div className="text-lg font-mono font-bold text-white mt-1">
                   {totalTokensMonthly >= 1000
                     ? `${(totalTokensMonthly / 1000).toFixed(2)}B`
                     : `${totalTokensMonthly.toFixed(1)}M`}
                 </div>
-                <div className="text-[11px] font-mono text-[#64748B] mt-1">
+                <div className="text-xs font-mono text-slate-500 mt-1">
                   {((monthlyRequests * avgInputTokens) / 1_000_000).toFixed(1)}M in ·{' '}
                   {((monthlyRequests * avgOutputTokens) / 1_000_000).toFixed(1)}M out
                 </div>
               </div>
 
-              <div className="surface-card rounded-xl p-4">
-                <div className="text-xs text-[#94A3B8]">Prompt Cache Savings</div>
-                <div className="text-lg font-mono font-bold text-emerald-400 mt-1">
+              <div className="surface-card rounded-2xl p-4">
+                <div className="text-xs text-slate-400">Prompt Cache Savings</div>
+                <div className="text-lg font-mono font-bold text-cyan-400 mt-1">
                   {formatUSD(maxSavings)}
                 </div>
-                <div className="text-[11px] text-[#64748B] mt-1">
+                <div className="text-xs text-slate-500 mt-1">
                   At {cachedPercentage}% cache hit rate
                 </div>
               </div>
             </div>
 
             {/* Markdown Export Button */}
-            <div className="surface-card rounded-xl p-3">
+            <div className="surface-card rounded-2xl p-3">
               <button
                 onClick={handleCopyMarkdown}
-                className="w-full py-2.5 px-3 rounded bg-[#1C2333] hover:bg-[#252E42] border border-[#2D3952] text-xs font-medium text-white flex items-center justify-center gap-2 transition-colors min-h-[44px]"
+                className="w-full py-2.5 px-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-medium text-white flex items-center justify-center gap-2 transition-colors min-h-[44px]"
               >
-                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                <span>{copied ? 'Copied Markdown to Clipboard' : 'Export Table as Markdown'}</span>
+                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-slate-400" />}
+                <span>{copied ? 'Copied Markdown Table to Clipboard' : 'Export Table as Markdown'}</span>
               </button>
             </div>
           </div>
@@ -498,18 +513,18 @@ export default function HeroCalculator() {
 
         {/* TAB 1: Comparison Table */}
         {activeTab === 'matrix' && (
-          <div className="surface-card rounded-xl overflow-hidden shadow-sm">
+          <div className="surface-card rounded-2xl overflow-hidden shadow-2xl">
             
             {/* Table Filters */}
-            <div className="p-4 border-b border-[#1E2538] bg-[#0E121B] flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="p-4 border-b border-white/10 bg-white/[0.01] flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div className="relative flex-1 max-w-sm">
-                <Search className="w-4 h-4 text-[#64748B] absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="Filter models (e.g. claude, gpt, deepseek)..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 rounded bg-[#090B10] border border-[#1E2538] text-xs text-white placeholder-[#64748B] focus:outline-none focus:border-emerald-500"
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#08090a] border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
@@ -520,13 +535,13 @@ export default function HeroCalculator() {
                     <button
                       key={p}
                       onClick={() => setSelectedProvider(p)}
-                      className={`px-3 py-1.5 rounded transition-colors whitespace-nowrap flex items-center gap-1.5 min-h-[36px] ${
+                      className={`px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5 min-h-[36px] ${
                         selectedProvider === p
-                          ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 font-semibold'
-                          : 'text-[#94A3B8] hover:text-white bg-[#090B10] border border-[#1E2538]'
+                          ? 'bg-indigo-600 text-white font-semibold shadow-sm'
+                          : 'text-slate-400 hover:text-white bg-white/[0.02] border border-white/5'
                       }`}
                     >
-                      {p !== 'All' && <ProviderIcon provider={p} className="w-3 h-3" />}
+                      {p !== 'All' && <ProviderIcon provider={p} className="w-3.5 h-3.5" />}
                       <span>{p}</span>
                     </button>
                   )
@@ -537,10 +552,10 @@ export default function HeroCalculator() {
             {/* Empty State Check */}
             {filteredResults.length === 0 ? (
               <div className="p-12 text-center">
-                <p className="text-sm text-[#94A3B8]">No models match your search criteria.</p>
+                <p className="text-sm text-slate-400">No models match your search criteria.</p>
                 <button
                   onClick={handleResetFilters}
-                  className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#1C2333] border border-[#2D3952] text-xs text-white hover:bg-[#252E42]"
+                  className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-xs text-white hover:bg-indigo-500 transition-colors"
                 >
                   <RotateCcw className="w-3.5 h-3.5" /> Reset Filters
                 </button>
@@ -549,146 +564,135 @@ export default function HeroCalculator() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-[#1E2538] bg-[#090B10] text-[#94A3B8] text-[11px] uppercase tracking-wider">
+                    <tr className="border-b border-white/10 bg-[#08090a] text-slate-400 text-xs uppercase tracking-wider">
                       <th
                         onClick={() => handleSort('name')}
-                        className="py-3 px-4 cursor-pointer hover:text-white"
+                        className="py-3.5 px-4 cursor-pointer hover:text-white font-semibold"
                       >
                         <div className="flex items-center gap-1">
                           <span>Model Name</span>
-                          <ArrowUpDown className="w-3 h-3 text-[#64748B]" />
+                          <ArrowUpDown className="w-3 h-3 text-slate-500" />
                         </div>
                       </th>
                       <th
                         onClick={() => handleSort('provider')}
-                        className="py-3 px-3 cursor-pointer hover:text-white"
+                        className="py-3.5 px-3 cursor-pointer hover:text-white font-semibold"
                       >
                         <div className="flex items-center gap-1">
                           <span>Provider</span>
-                          <ArrowUpDown className="w-3 h-3 text-[#64748B]" />
+                          <ArrowUpDown className="w-3 h-3 text-slate-500" />
                         </div>
                       </th>
-                      <th className="py-3 px-3">Context Window</th>
+                      <th className="py-3.5 px-3 font-semibold">Context Window</th>
                       <th
                         onClick={() => handleSort('input')}
-                        className="py-3 px-3 cursor-pointer hover:text-white"
+                        className="py-3.5 px-3 cursor-pointer hover:text-white font-semibold"
                       >
                         <div className="flex items-center gap-1">
                           <span>Input / 1M</span>
-                          <ArrowUpDown className="w-3 h-3 text-[#64748B]" />
+                          <ArrowUpDown className="w-3 h-3 text-slate-500" />
                         </div>
                       </th>
                       <th
                         onClick={() => handleSort('output')}
-                        className="py-3 px-3 cursor-pointer hover:text-white"
+                        className="py-3.5 px-3 cursor-pointer hover:text-white font-semibold"
                       >
                         <div className="flex items-center gap-1">
                           <span>Output / 1M</span>
-                          <ArrowUpDown className="w-3 h-3 text-[#64748B]" />
+                          <ArrowUpDown className="w-3 h-3 text-slate-500" />
                         </div>
                       </th>
-                      <th className="py-3 px-3 text-right">Cost / 1K Calls</th>
+                      <th className="py-3.5 px-3 text-right font-semibold">Cost / 1K Calls</th>
                       <th
                         onClick={() => handleSort('cost')}
-                        className="py-3 px-4 text-right cursor-pointer hover:text-white"
+                        className="py-3.5 px-4 text-right cursor-pointer hover:text-white font-semibold"
                       >
                         <div className="flex items-center justify-end gap-1">
-                          <span>Monthly Invoice</span>
-                          <ArrowUpDown className="w-3 h-3 text-[#64748B]" />
+                          <span>Monthly Total</span>
+                          <ArrowUpDown className="w-3 h-3 text-slate-500" />
                         </div>
                       </th>
-                      <th className="py-3 px-4 text-center">Action</th>
+                      <th className="py-3.5 px-4 text-center font-semibold">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#1E2538]/60">
-                    {filteredResults.map(({ model, totalMonthlyCost, costPer1kRequests, savingsFromCaching }, idx) => {
-                      const isLowest = idx === 0 && sortBy === 'cost' && sortAsc;
+                  <tbody className="divide-y divide-white/5">
+                    {filteredResults.map(({ model, totalMonthlyCost, costPer1kRequests }, index) => {
+                      const isTopRanked = index === 0;
+
                       return (
                         <tr
                           key={model.id}
-                          className={`hover:bg-[#151B27]/60 transition-colors ${
-                            isLowest ? 'bg-emerald-500/[0.04]' : ''
+                          className={`transition-colors hover:bg-white/[0.04] ${
+                            isTopRanked ? 'bg-indigo-500/[0.03]' : ''
                           }`}
                         >
-                          {/* Model */}
+                          {/* Model Name */}
                           <td className="py-3.5 px-4">
                             <div className="flex items-center gap-2.5">
-                              <span className="text-[11px] text-[#475569] w-4 text-right font-mono">
-                                {idx + 1}
+                              <span className="font-mono text-xs text-slate-500 w-4">
+                                {index + 1}
                               </span>
-                              <div className="p-1 rounded bg-[#090B10] border border-[#1E2538]">
-                                <ProviderIcon provider={model.provider} className="w-4 h-4" />
-                              </div>
                               <div>
                                 <Link
                                   href={`/model/${model.id}`}
-                                  className="font-semibold text-white hover:text-emerald-400 transition-colors flex items-center gap-1.5"
+                                  className="font-bold text-white hover:text-indigo-400 transition-colors flex items-center gap-1.5"
                                 >
-                                  {model.name}
-                                  {isLowest && (
-                                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-mono font-medium border border-emerald-500/30">
-                                      Lowest Cost
-                                    </span>
-                                  )}
+                                  <span>{model.name}</span>
                                 </Link>
-                                <div className="text-[11px] text-[#64748B]">
-                                  {model.qualityTier} · {model.latencyScore}
-                                </div>
+                                <span className="text-xs text-slate-500">{model.qualityTier}</span>
                               </div>
                             </div>
                           </td>
 
                           {/* Provider */}
-                          <td className="py-3 px-3 text-[#94A3B8]">
-                            <span className="px-2 py-0.5 rounded bg-[#141A26] border border-[#1E2538] text-[11px]">
-                              {model.provider}
-                            </span>
+                          <td className="py-3.5 px-3 text-slate-300">
+                            <div className="flex items-center gap-1.5">
+                              <ProviderIcon provider={model.provider} className="w-3.5 h-3.5" />
+                              <span>{model.provider}</span>
+                            </div>
                           </td>
 
-                          {/* Context */}
-                          <td className="py-3 px-3 text-[#94A3B8] font-mono">
+                          {/* Context Window */}
+                          <td className="py-3.5 px-3 font-mono text-slate-300">
                             {formatContextWindow(model.contextWindow)}
                           </td>
 
-                          {/* Input */}
-                          <td className="py-3 px-3 text-white font-mono">
+                          {/* Input Rate */}
+                          <td className="py-3.5 px-3 font-mono text-slate-200">
                             ${model.inputCostPer1M.toFixed(2)}
-                            {(model.cachedInputCostPer1M ?? 0) > 0 && (
-                              <span className="block text-[10px] text-emerald-400 font-mono">
-                                Cache: ${model.cachedInputCostPer1M!.toFixed(2)}
-                              </span>
-                            )}
                           </td>
 
-                          {/* Output */}
-                          <td className="py-3 px-3 text-white font-mono">
+                          {/* Output Rate */}
+                          <td className="py-3.5 px-3 font-mono text-slate-200">
                             ${model.outputCostPer1M.toFixed(2)}
                           </td>
 
-                          {/* Cost / 1k Calls */}
-                          <td className="py-3 px-3 text-right font-mono text-[#CBD5E1]">
+                          {/* Cost per 1K Calls */}
+                          <td className="py-3.5 px-3 font-mono text-right text-slate-300">
                             {formatUSD(costPer1kRequests)}
                           </td>
 
-                          {/* Total Cost */}
-                          <td className="py-3 px-4 text-right font-mono">
-                            <div className="text-sm font-bold text-white">
+                          {/* Total Monthly Spend */}
+                          <td className="py-3.5 px-4 text-right">
+                            <span
+                              className={`font-mono font-bold ${
+                                isTopRanked
+                                  ? 'text-indigo-400 text-sm'
+                                  : 'text-white'
+                              }`}
+                            >
                               {formatUSD(totalMonthlyCost)}
-                            </div>
-                            {savingsFromCaching > 0 && (
-                              <div className="text-[10px] text-emerald-400">
-                                Save {formatUSD(savingsFromCaching)}
-                              </div>
-                            )}
+                            </span>
                           </td>
 
-                          {/* Action */}
-                          <td className="py-3 px-4 text-center">
+                          {/* Actions */}
+                          <td className="py-3.5 px-4 text-center">
                             <Link
                               href={`/model/${model.id}`}
-                              className="text-xs text-emerald-400 hover:underline px-2 py-1"
+                              className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors inline-flex items-center gap-0.5"
                             >
-                              Details
+                              <span>Details</span>
+                              <ChevronRight className="w-3 h-3" />
                             </Link>
                           </td>
                         </tr>
@@ -701,57 +705,59 @@ export default function HeroCalculator() {
           </div>
         )}
 
-        {/* TAB 2: Sandbox */}
+        {/* TAB 2: Interactive Token Stream Canvas */}
+        {activeTab === 'simulator' && (
+          <TokenFlowCanvas
+            requestsPerMonth={monthlyRequests}
+            cachingPercentage={cachedPercentage}
+          />
+        )}
+
+        {/* TAB 3: Prompt Tokenizer Sandbox */}
         {activeTab === 'sandbox' && (
-          <div className="surface-card rounded-xl p-6 space-y-5">
-            <div>
-              <h3 className="text-base font-semibold text-white">
-                Live Prompt Tokenizer & Expense Analyzer
-              </h3>
-              <p className="text-xs text-[#94A3B8] mt-0.5">
-                Paste prompt instructions or system schemas to compute execution cost across providers.
-              </p>
-            </div>
+          <div className="surface-card rounded-2xl p-6 shadow-2xl">
+            <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+              <Code2 className="w-4 h-4 text-indigo-400" />
+              Interactive Prompt Token Count Sandbox
+            </h3>
+            <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+              Estimate token consumption based on average 4 characters per BPE token rule of thumb.
+            </p>
 
             <textarea
-              rows={4}
+              rows={5}
               value={sandboxText}
               onChange={(e) => setSandboxText(e.target.value)}
-              className="w-full p-3 rounded-lg bg-[#090B10] border border-[#1E2538] text-xs font-mono text-white placeholder-[#64748B] focus:outline-none focus:border-emerald-500"
-              placeholder="Paste raw prompt text here..."
+              placeholder="Paste your system prompt, function definitions, or sample user input here..."
+              className="w-full p-3.5 rounded-xl bg-[#08090a] border border-white/10 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-500 leading-relaxed"
             />
 
-            <div className="flex items-center justify-between text-xs font-mono bg-[#090B10] p-3 rounded-lg border border-[#1E2538]">
-              <div className="flex items-center gap-4">
-                <span>
-                  Length: <strong className="text-white">{sandboxText.length}</strong> chars
-                </span>
-                <span>
-                  Words: <strong className="text-white">{sandboxText.trim().split(/\s+/).length}</strong>
-                </span>
-                <span>
-                  Approx. Tokens: <strong className="text-emerald-400">{sandboxTokens}</strong> tok
-                </span>
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-[#08090a] border border-white/10">
+              <div className="flex items-center gap-6 text-xs">
+                <div>
+                  <span className="text-slate-500 block">Character Count:</span>
+                  <span className="text-white font-mono font-bold text-sm">
+                    {sandboxText.length.toLocaleString()} chars
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block">Estimated Tokens:</span>
+                  <span className="text-indigo-400 font-mono font-bold text-sm">
+                    ~{sandboxTokens.toLocaleString()} tokens
+                  </span>
+                </div>
               </div>
-              <span className="text-[11px] text-[#64748B]">BPE Approximation</span>
-            </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-              {filteredResults.slice(0, 4).map(({ model }) => {
-                const singleCallCost = (sandboxTokens * model.inputCostPer1M) / 1_000_000;
-                return (
-                  <div key={model.id} className="p-3.5 rounded-lg bg-[#090B10] border border-[#1E2538]">
-                    <div className="text-xs text-[#94A3B8] truncate">{model.name}</div>
-                    <div className="text-sm font-bold text-white font-mono mt-1">
-                      ${singleCallCost.toFixed(6)}
-                    </div>
-                    <div className="text-[10px] text-[#64748B] mt-0.5 font-mono">Per invocation</div>
-                  </div>
-                );
-              })}
+              <button
+                onClick={() => setAvgInputTokens(sandboxTokens)}
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition-colors min-h-[40px]"
+              >
+                Apply as Input Tokens ({sandboxTokens})
+              </button>
             </div>
           </div>
         )}
+
       </div>
     </section>
   );

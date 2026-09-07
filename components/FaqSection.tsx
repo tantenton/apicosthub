@@ -39,16 +39,16 @@ export default function FaqSection() {
   };
 
   return (
-    <section id="faq" className="w-full py-12 border-t border-[#1E2538] bg-[#090B10]">
+    <section id="faq" className="w-full py-12 border-t border-white/10 bg-[#08090a]">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         
         {/* Section Header */}
-        <div className="mb-8 pb-4 border-b border-[#1E2538]">
-          <div className="flex items-center gap-2 text-xs text-[#94A3B8] font-semibold uppercase tracking-wider mb-1">
-            <HelpCircle className="w-4 h-4 text-emerald-400" />
+        <div className="mb-8 pb-4 border-b border-white/10">
+          <div className="flex items-center gap-2 text-xs text-indigo-400 font-semibold uppercase tracking-wider mb-1">
+            <HelpCircle className="w-4 h-4 text-indigo-400" />
             <span>Frequently Asked Questions</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+          <h2 className="text-xl sm:text-3xl font-bold text-white tracking-tight">
             LLM API Economics and Infrastructure Guidance
           </h2>
         </div>
@@ -60,22 +60,24 @@ export default function FaqSection() {
             return (
               <div
                 key={item.q}
-                className="surface-card rounded-xl border border-[#1E2538] overflow-hidden transition-colors"
+                className="surface-card rounded-2xl border border-white/10 overflow-hidden shadow-lg transition-colors"
               >
                 <button
                   onClick={() => toggle(idx)}
-                  className="w-full px-5 py-4 text-left flex items-center justify-between gap-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 min-h-[44px]"
+                  className="w-full p-5 text-left flex items-center justify-between gap-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 min-h-[48px]"
                   aria-expanded={isOpen}
                 >
-                  <span className="text-sm font-semibold text-white">{item.q}</span>
+                  <span className="font-semibold text-white text-sm">
+                    {item.q}
+                  </span>
                   <ChevronDown
-                    className={`w-4 h-4 text-[#94A3B8] shrink-0 transition-transform duration-200 ${
-                      isOpen ? 'rotate-180 text-emerald-400' : ''
+                    className={`w-4 h-4 text-indigo-400 transition-transform duration-200 flex-shrink-0 ${
+                      isOpen ? 'rotate-180' : ''
                     }`}
                   />
                 </button>
                 {isOpen && (
-                  <div className="px-5 pb-4 pt-1 text-xs text-[#94A3B8] leading-relaxed border-t border-[#1E2538]/60">
+                  <div className="px-5 pb-5 text-xs text-slate-400 leading-relaxed border-t border-white/5 pt-3">
                     {item.a}
                   </div>
                 )}
