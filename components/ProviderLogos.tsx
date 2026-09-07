@@ -39,7 +39,7 @@ export function DeepSeekLogo({ className = 'w-4 h-4' }: LogoProps) {
 export function MetaLogo({ className = 'w-4 h-4' }: LogoProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 4.332c-3.076 0-5.834 1.83-7.234 4.545C3.366 11.59 3.96 14.86 6.2 16.994c1.82 1.737 4.385 2.674 7.034 2.674 3.075 0 5.833-1.83 7.233-4.545 1.4-2.714.806-5.983-1.433-8.118C17.214 5.268 14.65 4.332 12 4.332zm-.72 9.946c-1.353 0-2.45-.98-2.45-2.28 0-1.298 1.097-2.278 2.45-2.278 1.354 0 2.451.98 2.451 2.278 0 1.3-.097 2.28-2.451 2.28z" />
+      <path d="M12 4.332c-3.076 0-5.834 1.83-7.234 4.545C3.366 11.59 3.96 14.86 6.2 16.994c1.82 1.737 4.385 2.674 7.034 2.674 3.075 0 5.833-1.83 7.233-4.545 1.4-2.714.806-5.983-1.433-8.118C17.214 5.268 14.65 4.332 12 4.332zm-.72 9.946c-1.353 0-2.45-.98-2.45-2.28 0-1.298 1.097-2.278 2.45-2.278 1.354 0 2.451.98 2.451 2.28 0 1.3-.097 2.28-2.451 2.28z" />
     </svg>
   );
 }
@@ -78,4 +78,8 @@ export function ProviderIcon({ provider, className = 'w-4 h-4' }: { provider: st
     default:
       return <OpenAILogo className={className} />;
   }
+}
+
+export function getProviderLogo(provider: string) {
+  return <ProviderIcon provider={provider} />;
 }

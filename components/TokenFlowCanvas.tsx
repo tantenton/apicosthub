@@ -1,23 +1,46 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Play, Pause, RefreshCw, Zap, Cpu, Database, Activity } from 'lucide-react';
+import { Play, Pause, RefreshCw, Zap, Cpu, Database, Activity, FastForward } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface TokenFlowCanvasProps {
   requestsPerMonth?: number;
   cachingPercentage?: number;
-  className?: string;
+}
+
+interface Particle {
+  x: number;
+  y: number;
+  targetX: number;
+  targetY: number;
+  progress: number;
+  speed: number;
+  color: string;
+  size: number;
+  type: 'input' | 'cache' | 'reasoning' | 'output';
 }
 
 export default function TokenFlowCanvas({
   requestsPerMonth = 500_000,
-  cachingPercentage = 50,
-  className = '',
+  cachingPercentage = 40,
 }: TokenFlowCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [isRunning, setIsRunning] = useState(true);
-  const [activeModel, setActiveModel] = useState<string>('DeepSeek V3');
-  const [liveTokensPerSec, setLiveTokensPerSec] = useState<number>(0);
+  const [isPlaying, setIsPlaying] = useState<boolean>(true);
+  const [activeModel, setActiveModel] = useState<'deepseek-v3' | 'claude-3-5' | 'gpt-4o'>('deepseek-v3');
+  const [liveTokensPerSec, setLiveTokensPerSec] = useState<number>(1420);
+  const [turboMode, setTurboMode] = useState<boolean>(false);
+
+  const stateRef = useRef({
+    isPlaying: true,
+    speedMultiplier: 1.0,
+    turbo: false,
+    particles: [] as Particle[],
+  });
+
+  stateRef.current.isPlaying = isPlaying;
+  stateRef.current.turbo = turboMode;
+  stateRef.current.speedMultiplier = Math.max(0.5, Math.min(3.0, (requestsPerMonth / 500_000)));
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -25,7 +48,7 @@ export default function TokenFlowCanvas({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let animationId: number;
+    let animationFrameId: number;
     let width = (canvas.width = canvas.parentElement?.clientWidth || 800);
     let height = (canvas.height = 360);
 
@@ -37,252 +60,255 @@ export default function TokenFlowCanvas({
 
     window.addEventListener('resize', handleResize);
 
-    // Dynamic speeds derived from request volume slider
-    const speedMultiplier = Math.max(0.6, Math.min(3.0, requestsPerMonth / 300_000));
-    setLiveTokensPerSec(Math.round((requestsPerMonth * 2500) / (30 * 24 * 3600)));
-
-    // Define Topology Nodes
-    const getNodes = () => [
-      { id: 'client', x: width * 0.12, y: height * 0.5, label: 'Client API Request', color: '#707eff', icon: 'zap' },
-      { id: 'gateway', x: width * 0.35, y: height * 0.35, label: 'Routing Gateway', color: '#38bdf8', icon: 'cpu' },
-      { id: 'cache', x: width * 0.35, y: height * 0.72, label: `KV-Cache (${cachingPercentage}%)`, color: '#10b981', icon: 'db' },
-      { id: 'model', x: width * 0.65, y: height * 0.5, label: activeModel, color: '#a855f7', icon: 'model' },
-      { id: 'output', x: width * 0.88, y: height * 0.5, label: 'Stream Completion', color: '#818cf8', icon: 'stream' },
-    ];
-
-    interface Particle {
-      x: number;
-      y: number;
-      progress: number;
-      speed: number;
-      pathType: 'cache' | 'direct' | 'out';
-      color: string;
-      size: number;
-    }
-
-    const particles: Particle[] = [];
-    const maxParticles = Math.min(65, Math.floor(25 + (requestsPerMonth / 1_000_000) * 40));
-
-    for (let i = 0; i < maxParticles; i++) {
-      const isCached = Math.random() * 100 < cachingPercentage;
-      particles.push({
-        x: 0,
-        y: 0,
-        progress: Math.random(),
-        speed: (0.003 + Math.random() * 0.004) * speedMultiplier,
-        pathType: isCached ? 'cache' : 'direct',
-        color: isCached ? '#10b981' : '#707eff',
-        size: 2 + Math.random() * 2.5,
-      });
-    }
-
-    let frame = 0;
-
-    const render = () => {
-      frame++;
-      ctx.fillStyle = '#08090a';
-      ctx.fillRect(0, 0, width, height);
-
-      const nodes = getNodes();
-
-      // Draw subtle grid lines
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-      ctx.lineWidth = 1;
-      const step = 40;
-      for (let x = 0; x < width; x += step) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, height);
-        ctx.stroke();
-      }
-      for (let y = 0; y < height; y += step) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
-        ctx.stroke();
-      }
-
-      // Draw Network Paths
-      const drawCurvedLine = (n1: { x: number; y: number }, n2: { x: number; y: number }, color: string) => {
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(n1.x, n1.y);
-        const midX = (n1.x + n2.x) / 2;
-        ctx.bezierCurveTo(midX, n1.y, midX, n2.y, n2.x, n2.y);
-        ctx.stroke();
+    // Node Positions
+    const getNodes = () => {
+      const cy = height / 2;
+      return {
+        client: { x: width * 0.12, y: cy, label: 'Client App', color: '#2563eb' },
+        router: { x: width * 0.32, y: cy, label: 'Gateway Router', color: '#4f46e5' },
+        cache: { x: width * 0.52, y: cy - 85, label: 'KV-Cache (Prefix Hit)', color: '#059669' },
+        llm: { x: width * 0.52, y: cy + 75, label: 'Model Inference', color: '#7c3aed' },
+        collector: { x: width * 0.72, y: cy, label: 'Token Assembly', color: '#4f46e5' },
+        consumer: { x: width * 0.90, y: cy, label: 'SSE Stream Target', color: '#0284c7' },
       };
-
-      // Background path connections
-      drawCurvedLine(nodes[0], nodes[1], 'rgba(56, 189, 248, 0.25)'); // Client to Gateway
-      drawCurvedLine(nodes[0], nodes[2], 'rgba(16, 185, 129, 0.25)'); // Client to Cache
-      drawCurvedLine(nodes[1], nodes[3], 'rgba(168, 85, 247, 0.25)'); // Gateway to Model
-      drawCurvedLine(nodes[2], nodes[3], 'rgba(16, 185, 129, 0.25)'); // Cache to Model
-      drawCurvedLine(nodes[3], nodes[4], 'rgba(129, 140, 248, 0.35)'); // Model to Output
-
-      // Update & Draw Particles
-      particles.forEach((p) => {
-        p.progress += p.speed;
-        if (p.progress > 1) {
-          p.progress = 0;
-          const isCached = Math.random() * 100 < cachingPercentage;
-          p.pathType = isCached ? 'cache' : 'direct';
-          p.color = isCached ? '#34d399' : '#818cf8';
-        }
-
-        let startNode, targetNode;
-        if (p.progress < 0.5) {
-          startNode = nodes[0];
-          targetNode = p.pathType === 'cache' ? nodes[2] : nodes[1];
-          const localT = p.progress * 2;
-          const midX = (startNode.x + targetNode.x) / 2;
-          p.x = Math.pow(1 - localT, 2) * startNode.x + 2 * (1 - localT) * localT * midX + Math.pow(localT, 2) * targetNode.x;
-          p.y = Math.pow(1 - localT, 2) * startNode.y + 2 * (1 - localT) * localT * targetNode.y + Math.pow(localT, 2) * targetNode.y;
-        } else {
-          startNode = p.pathType === 'cache' ? nodes[2] : nodes[1];
-          targetNode = nodes[3];
-          const localT = (p.progress - 0.5) * 2;
-          const midX = (startNode.x + targetNode.x) / 2;
-          p.x = Math.pow(1 - localT, 2) * startNode.x + 2 * (1 - localT) * localT * midX + Math.pow(localT, 2) * targetNode.x;
-          p.y = Math.pow(1 - localT, 2) * startNode.y + 2 * (1 - localT) * localT * startNode.y + Math.pow(localT, 2) * targetNode.y;
-        }
-
-        // Draw particle with luminous glow
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.shadowColor = p.color;
-        ctx.shadowBlur = 8;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      });
-
-      // Draw Completion Output Stream
-      for (let i = 0; i < 8; i++) {
-        const streamProgress = ((frame * 0.02 + i / 8) % 1);
-        const sx = nodes[3].x + streamProgress * (nodes[4].x - nodes[3].x);
-        const sy = nodes[3].y + Math.sin(frame * 0.05 + i) * 8;
-        ctx.beginPath();
-        ctx.arc(sx, sy, 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = '#a5b4fc';
-        ctx.shadowColor = '#818cf8';
-        ctx.shadowBlur = 6;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-
-      // Draw Nodes
-      nodes.forEach((node, idx) => {
-        const pulse = Math.sin(frame * 0.04 + idx) * 3;
-
-        // Outer glow
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, 22 + pulse, 0, Math.PI * 2);
-        ctx.fillStyle = `${node.color}15`;
-        ctx.fill();
-
-        // Node circle container
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, 16, 0, Math.PI * 2);
-        ctx.fillStyle = '#111318';
-        ctx.strokeStyle = node.color;
-        ctx.lineWidth = 1.5;
-        ctx.shadowColor = node.color;
-        ctx.shadowBlur = 10;
-        ctx.fill();
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-
-        // Node center pip
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = node.color;
-        ctx.fill();
-
-        // Node Label
-        ctx.fillStyle = '#cbd5e1';
-        ctx.font = '11px Inter, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(node.label, node.x, node.y + 32);
-      });
-
-      if (isRunning) {
-        animationId = requestAnimationFrame(render);
-      }
     };
 
-    render();
+    const spawnParticle = (nodes: ReturnType<typeof getNodes>): Particle => {
+      const isCacheHit = Math.random() * 100 < cachingPercentage;
+      const type: Particle['type'] = isCacheHit ? 'cache' : 'input';
+      const color = isCacheHit ? '#059669' : '#2563eb';
+
+      return {
+        x: nodes.client.x,
+        y: nodes.client.y,
+        targetX: nodes.router.x,
+        targetY: nodes.router.y,
+        progress: 0,
+        speed: (0.012 + Math.random() * 0.008) * stateRef.current.speedMultiplier * (stateRef.current.turbo ? 2.5 : 1),
+        color,
+        size: 3.5 + Math.random() * 2,
+        type,
+      };
+    };
+
+    let particles: Particle[] = [];
+    let lastSpawn = performance.now();
+
+    const render = (time: number) => {
+      if (stateRef.current.isPlaying) {
+        // Spawn particles
+        const nodes = getNodes();
+        const spawnInterval = stateRef.current.turbo ? 40 : 120 / stateRef.current.speedMultiplier;
+        if (time - lastSpawn > spawnInterval && particles.length < 80) {
+          particles.push(spawnParticle(nodes));
+          lastSpawn = time;
+        }
+
+        // Clean Canvas with Soft Crisp Light Background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+
+        // Subtle background grid dots
+        ctx.fillStyle = '#e2e8f0';
+        for (let gx = 20; gx < width; gx += 30) {
+          for (let gy = 20; gy < height; gy += 30) {
+            ctx.beginPath();
+            ctx.arc(gx, gy, 1, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Draw connections with sleek light borders
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+
+        const drawEdge = (x1: number, y1: number, x2: number, y2: number) => {
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        };
+
+        drawEdge(nodes.client.x, nodes.client.y, nodes.router.x, nodes.router.y);
+        drawEdge(nodes.router.x, nodes.router.y, nodes.cache.x, nodes.cache.y);
+        drawEdge(nodes.router.x, nodes.router.y, nodes.llm.x, nodes.llm.y);
+        drawEdge(nodes.cache.x, nodes.cache.y, nodes.collector.x, nodes.collector.y);
+        drawEdge(nodes.llm.x, nodes.llm.y, nodes.collector.x, nodes.collector.y);
+        drawEdge(nodes.collector.x, nodes.collector.y, nodes.consumer.x, nodes.consumer.y);
+
+        ctx.setLineDash([]);
+
+        // Update and draw particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.progress += p.speed;
+
+          if (p.progress >= 1.0) {
+            // State transitions
+            if (p.targetX === nodes.router.x) {
+              p.x = nodes.router.x;
+              p.y = nodes.router.y;
+              p.progress = 0;
+              if (p.type === 'cache') {
+                p.targetX = nodes.cache.x;
+                p.targetY = nodes.cache.y;
+              } else {
+                p.targetX = nodes.llm.x;
+                p.targetY = nodes.llm.y;
+              }
+            } else if (p.targetX === nodes.cache.x || p.targetX === nodes.llm.x) {
+              p.x = p.targetX;
+              p.y = p.targetY;
+              p.progress = 0;
+              p.targetX = nodes.collector.x;
+              p.targetY = nodes.collector.y;
+              p.color = p.type === 'cache' ? '#059669' : '#7c3aed';
+            } else if (p.targetX === nodes.collector.x) {
+              p.x = nodes.collector.x;
+              p.y = nodes.collector.y;
+              p.progress = 0;
+              p.targetX = nodes.consumer.x;
+              p.targetY = nodes.consumer.y;
+              p.color = '#4f46e5';
+            } else {
+              particles.splice(i, 1);
+              continue;
+            }
+          }
+
+          // Compute position along current segment
+          const cx = p.x + (p.targetX - p.x) * p.progress;
+          const cy = p.y + (p.targetY - p.y) * p.progress;
+
+          // Outer luminous glow
+          ctx.beginPath();
+          ctx.arc(cx, cy, p.size * 2, 0, Math.PI * 2);
+          ctx.fillStyle = p.color + '25';
+          ctx.fill();
+
+          // Particle core
+          ctx.beginPath();
+          ctx.arc(cx, cy, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.fill();
+        }
+
+        // Draw Nodes
+        Object.entries(nodes).forEach(([key, n]) => {
+          // Outer ripple
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, 22, 0, Math.PI * 2);
+          ctx.fillStyle = n.color + '15';
+          ctx.fill();
+
+          // Outer ring
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, 18, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+          ctx.lineWidth = 2.5;
+          ctx.strokeStyle = n.color;
+          ctx.stroke();
+
+          // Center dot
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, 6, 0, Math.PI * 2);
+          ctx.fillStyle = n.color;
+          ctx.fill();
+
+          // Node text label
+          ctx.font = '600 11px Inter, sans-serif';
+          ctx.fillStyle = '#1e293b';
+          ctx.textAlign = 'center';
+          ctx.fillText(n.label, n.x, n.y + 32);
+        });
+      }
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    animationFrameId = requestAnimationFrame(render);
 
     return () => {
-      cancelAnimationFrame(animationId);
+      cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', handleResize);
     };
-  }, [isRunning, requestsPerMonth, cachingPercentage, activeModel]);
+  }, [cachingPercentage, activeModel]);
 
   return (
-    <div className={`surface-card rounded-2xl p-5 border border-white/10 relative overflow-hidden ${className}`}>
-      {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-            <Activity className="w-4 h-4 animate-pulse" />
+    <div className="surface-card rounded-2xl p-6 shadow-xl border border-slate-200 overflow-hidden my-6">
+      {/* Simulator Toolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">
+              Interactive HTML5 Live Engine
+            </span>
           </div>
-          <div>
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-400">
-              <span>Interactive HTML5 Canvas Simulator</span>
-            </div>
-            <h3 className="text-base font-bold text-white">
-              Real-Time Inference & KV-Cache Token Flow Pipeline
-            </h3>
-          </div>
+          <h3 className="text-base font-bold text-slate-900">
+            Real-Time Token Stream & KV-Cache Routing Simulator
+          </h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Physics-based particle engine rendering inference request routing and prefix cache hits at 60 FPS.
+          </p>
         </div>
 
-        {/* Controls & Model Toggles */}
-        <div className="flex items-center gap-2 self-start sm:self-auto text-xs">
-          <div className="flex items-center bg-white/5 rounded-lg p-1 border border-white/10">
-            {['DeepSeek V3', 'Claude 3.5', 'GPT-4o'].map((m) => (
-              <button
-                key={m}
-                onClick={() => setActiveModel(m)}
-                className={`px-2.5 py-1 rounded transition-colors ${
-                  activeModel === m
-                    ? 'bg-indigo-600 text-white font-medium shadow-sm'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
+        {/* Action Controls */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            onClick={() => setTurboMode(!turboMode)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              turboMode
+                ? 'bg-amber-500 text-white shadow-sm'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+            }`}
+          >
+            <FastForward className="w-3.5 h-3.5" />
+            <span>{turboMode ? 'Turbo (3x)' : '1x Speed'}</span>
+          </button>
 
           <button
-            onClick={() => setIsRunning(!isRunning)}
-            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition-colors"
-            title={isRunning ? 'Pause Animation' : 'Resume Animation'}
+            onClick={() => setIsPlaying(!isPlaying)}
+            className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+            title={isPlaying ? 'Pause Simulation' : 'Resume Simulation'}
           >
-            {isRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 text-emerald-400" />}
+            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
           </button>
         </div>
       </div>
 
-      {/* Canvas Element */}
-      <div className="relative w-full rounded-xl overflow-hidden bg-[#08090a] border border-white/5 shadow-inner">
-        <canvas ref={canvasRef} className="w-full block h-[320px] sm:h-[360px]" />
-        
-        {/* Live HUD overlay */}
-        <div className="absolute top-3 left-3 bg-[#0d0f14]/85 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 text-xs font-mono text-slate-300 flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span className="text-white font-bold">{liveTokensPerSec.toLocaleString()}</span>
-            <span className="text-slate-500">tok/s throughput</span>
-          </div>
-          <div className="text-slate-400 border-l border-white/10 pl-3">
-            Cache hit: <span className="text-emerald-400 font-bold">{cachingPercentage}%</span>
-          </div>
-        </div>
+      {/* Canvas Viewport */}
+      <div className="relative w-full h-[360px] bg-white rounded-xl border border-slate-200 my-4 overflow-hidden shadow-inner">
+        <canvas ref={canvasRef} className="w-full h-full block" />
+      </div>
 
-        <div className="absolute bottom-3 right-3 bg-[#0d0f14]/85 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 text-xs text-slate-400">
-          HTML5 60FPS Reactive Particle Mesh
+      {/* Live Telemetry Bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs">
+        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+          <span className="text-slate-500 block">Cache Hit Rate</span>
+          <span className="font-mono font-bold text-emerald-600 text-sm">
+            {cachingPercentage}% Hits
+          </span>
+        </div>
+        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+          <span className="text-slate-500 block">Simulation Pipeline</span>
+          <span className="font-mono font-bold text-indigo-600 text-sm">
+            Active 60 FPS
+          </span>
+        </div>
+        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+          <span className="text-slate-500 block">Monthly Invocations</span>
+          <span className="font-mono font-bold text-slate-900 text-sm">
+            {(requestsPerMonth / 1000).toLocaleString()}k calls
+          </span>
+        </div>
+        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+          <span className="text-slate-500 block">Routing Latency</span>
+          <span className="font-mono font-bold text-slate-900 text-sm">
+            ~18ms Overhead
+          </span>
         </div>
       </div>
     </div>

@@ -1,223 +1,161 @@
 'use client';
 
 import React, { useState } from 'react';
-import { AIModel, AI_MODELS } from '@/data/models';
-import { ProviderIcon } from './ProviderLogos';
-import { Layers, Crosshair, ArrowUpRight } from 'lucide-react';
-
-interface ModelBenchmarkPoint {
-  model: AIModel;
-  intelligenceScore: number; // 0 - 100
-  blendedCostPer1M: number; // (Input * 3 + Output * 1) / 4
-  isParetoFrontier?: boolean;
-}
+import { AI_MODELS, AIModel } from '../data/models';
+import { Sparkles, Info, ArrowUpRight, TrendingUp } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function ParetoMatrixChart() {
-  const [selectedFilter, setSelectedFilter] = useState<'all' | 'reasoning' | 'fast' | 'frontier'>('all');
-  const [hoveredModel, setHoveredModel] = useState<ModelBenchmarkPoint | null>(null);
+  const [selectedModel, setSelectedModel] = useState<AIModel | null>(null);
 
-  // Map benchmark scores based on current industry benchmarks (LMSYS Arena / SWE-bench / Artificial Analysis Quality Index)
-  const benchmarkData: ModelBenchmarkPoint[] = AI_MODELS.map((m) => {
-    let score = 80;
-    if (m.id === 'deepseek-r1') score = 96;
-    else if (m.id === 'o1') score = 98;
-    else if (m.id === 'claude-3-5-sonnet') score = 95;
-    else if (m.id === 'gpt-4o') score = 91;
-    else if (m.id === 'deepseek-v3') score = 90;
-    else if (m.id === 'gemini-2-0-flash') score = 85;
-    else if (m.id === 'llama-3-3-70b') score = 86;
-    else if (m.id === 'gpt-4o-mini') score = 82;
-    else if (m.id === 'claude-3-5-haiku') score = 83;
-    else if (m.id === 'mistral-large') score = 88;
-    else if (m.id === 'command-r-plus') score = 84;
-    else if (m.id === 'gemini-1-5-pro') score = 90;
-    else if (m.id === 'llama-3-1-405b') score = 92;
-    else if (m.id === 'o3-mini') score = 94;
-
-    const blendedCost = Number(((m.inputCostPer1M * 0.75 + m.outputCostPer1M * 0.25)).toFixed(3));
-    
-    // Pareto Frontier: Unbeatable value-for-money at their tier
-    const isPareto = ['deepseek-v3', 'deepseek-r1', 'gemini-2-0-flash', 'claude-3-5-sonnet', 'gpt-4o-mini'].includes(m.id);
-
-    return {
-      model: m,
-      intelligenceScore: score,
-      blendedCostPer1M: blendedCost,
-      isParetoFrontier: isPareto,
-    };
-  });
-
-  const filteredData = benchmarkData.filter((item) => {
-    if (selectedFilter === 'reasoning') return item.model.qualityTier === 'Reasoning Heavy' || item.intelligenceScore >= 93;
-    if (selectedFilter === 'fast') return item.blendedCostPer1M < 1.0;
-    if (selectedFilter === 'frontier') return item.isParetoFrontier;
-    return true;
-  });
-
-  const minScore = 78;
-  const maxScore = 100;
-  const maxCost = 16;
-
-  const getCoords = (cost: number, score: number) => {
-    const normX = Math.sqrt(Math.min(cost, maxCost)) / Math.sqrt(maxCost);
-    const xPercent = 8 + normX * 82;
-    const normY = (score - minScore) / (maxScore - minScore);
-    const yPercent = 90 - normY * 78;
-    return { x: xPercent, y: yPercent };
+  // Quality score estimation (MMLU-Pro / Arena ELO proxy)
+  const getQualityScore = (model: AIModel): number => {
+    switch (model.id) {
+      case 'o1': return 98;
+      case 'o3-mini': return 92;
+      case 'claude-3-5-sonnet': return 95;
+      case 'claude-3-5-haiku': return 84;
+      case 'deepseek-r1': return 94;
+      case 'deepseek-v3': return 88;
+      case 'gpt-4o': return 91;
+      case 'gpt-4o-mini': return 82;
+      case 'gemini-1-5-pro': return 89;
+      case 'gemini-1-5-flash': return 80;
+      case 'llama-3-3-70b': return 86;
+      case 'mistral-large': return 85;
+      default: return 75;
+    }
   };
 
+  // Blended price per 1M (3:1 input:output)
+  const getBlendedPrice = (model: AIModel): number => {
+    return (model.inputPricePerMillion * 3 + model.outputPricePerMillion) / 4;
+  };
+
+  const chartData = AI_MODELS.map((m) => ({
+    model: m,
+    score: getQualityScore(m),
+    price: getBlendedPrice(m),
+  }));
+
+  // Min/Max for plotting
+  const minScore = 75;
+  const maxScore = 100;
+  const minPrice = 0.1;
+  const maxPrice = 16.0;
+
   return (
-    <section className="mb-14 rounded-2xl border border-white/10 surface-card p-6 sm:p-8 relative shadow-2xl">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/10">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2.5 py-1 rounded-full text-xs font-semibold uppercase bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 flex items-center gap-1.5">
-              <Crosshair className="w-3.5 h-3.5" /> Pareto Efficiency Matrix
+    <section id="pareto" className="w-full max-w-7xl px-4 sm:px-6 my-10">
+      <div className="surface-card rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-xl overflow-hidden">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-slate-100">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold mb-2">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Frontier Intelligence vs Cost Curve</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Pareto Frontier Efficiency Matrix
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 mt-1">
+              Identify the highest intelligence yield per dollar spent across 16 frontier models.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4 text-xs font-medium text-slate-600">
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-emerald-500" />
+              <span>Pareto Dominant (Best Value)</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-indigo-500" />
+              <span>Standard Frontier</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Matrix Plot Container */}
+        <div className="relative mt-8 w-full h-[420px] bg-white rounded-2xl border border-slate-200 p-6 overflow-hidden">
+          {/* Subtle Grid Lines */}
+          <div className="absolute inset-0 grid grid-cols-4 grid-rows-4 pointer-events-none">
+            {Array.from({ length: 16 }).map((_, i) => (
+              <div key={i} className="border-r border-b border-slate-100" />
+            ))}
+          </div>
+
+          {/* Quadrant Watermark Labels */}
+          <div className="absolute top-4 left-6 pointer-events-none">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-600/80 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
+              Pareto Frontier · High Intelligence & Low Cost
             </span>
-            <span className="text-xs text-slate-400">Evaluation Landscape</span>
           </div>
-          <h2 className="text-xl sm:text-3xl font-bold text-white tracking-tight">
-            Quality vs Cost Efficiency Landscape
-          </h2>
-          <p className="text-xs text-slate-400 mt-1 max-w-2xl">
-            Interactive evaluation mapping <strong>Intelligence Benchmark Score</strong> against <strong>Blended Token Pricing</strong>. Models positioned higher and further to the left provide superior unit economics.
-          </p>
-        </div>
 
-        {/* Filter Buttons */}
-        <div className="flex items-center gap-1.5 bg-[#08090a] p-1.5 rounded-xl border border-white/10 self-start md:self-auto">
-          <button
-            onClick={() => setSelectedFilter('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs transition-all min-h-[36px] ${
-              selectedFilter === 'all'
-                ? 'bg-indigo-600 text-white shadow-sm font-semibold'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            All (16)
-          </button>
-          <button
-            onClick={() => setSelectedFilter('frontier')}
-            className={`px-3 py-1.5 rounded-lg text-xs transition-all min-h-[36px] flex items-center gap-1 ${
-              selectedFilter === 'frontier'
-                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-semibold'
-                : 'text-slate-400 hover:text-indigo-400'
-            }`}
-          >
-            <Crosshair className="w-3 h-3 text-indigo-400" /> Pareto Value
-          </button>
-          <button
-            onClick={() => setSelectedFilter('fast')}
-            className={`px-3 py-1.5 rounded-lg text-xs transition-all min-h-[36px] ${
-              selectedFilter === 'fast'
-                ? 'bg-indigo-600 text-white shadow-sm font-semibold'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Sub-$1/1M
-          </button>
-          <button
-            onClick={() => setSelectedFilter('reasoning')}
-            className={`px-3 py-1.5 rounded-lg text-xs transition-all min-h-[36px] ${
-              selectedFilter === 'reasoning'
-                ? 'bg-indigo-600 text-white shadow-sm font-semibold'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Reasoning
-          </button>
-        </div>
-      </div>
-
-      {/* Chart Canvas Area */}
-      <div className="relative w-full h-[400px] sm:h-[460px] mt-6 bg-[#08090a] rounded-xl border border-white/10 p-4 select-none">
-        {/* Y-axis Label */}
-        <div className="absolute left-2 top-3 text-xs text-slate-400 flex items-center gap-1">
-          ↑ Quality Index (0 to 100)
-        </div>
-
-        {/* X-axis Label */}
-        <div className="absolute right-4 bottom-2 text-xs text-slate-400">
-          Blended Cost ($ / 1M Tokens) →
-        </div>
-
-        {/* Grid lines */}
-        <div className="absolute inset-x-12 inset-y-10 pointer-events-none">
-          {/* Horizontal lines */}
-          <div className="absolute w-full top-0 border-b border-white/5 flex justify-between text-xs text-slate-600 -mt-2">
-            <span>Score: 100 (Frontier)</span>
+          <div className="absolute top-4 right-6 pointer-events-none">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-indigo-600/80 bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-200">
+              Heavy Frontier Reasoning
+            </span>
           </div>
-          <div className="absolute w-full top-1/3 border-b border-white/5 flex justify-between text-xs text-slate-600 -mt-2">
-            <span>Score: 92 (Coding & Multi-Step Analysis)</span>
+
+          {/* Scatter Points */}
+          <div className="relative w-full h-full">
+            {chartData.map(({ model, score, price }) => {
+              // Normalized X (log scale for price 0.1 to 16)
+              const logMin = Math.log10(minPrice);
+              const logMax = Math.log10(maxPrice);
+              const logPrice = Math.log10(Math.max(price, minPrice));
+              const leftPercent = Math.min(94, Math.max(6, ((logPrice - logMin) / (logMax - logMin)) * 100));
+
+              // Normalized Y (linear for score 75 to 100)
+              const topPercent = Math.min(92, Math.max(8, 100 - ((score - minScore) / (maxScore - minScore)) * 100));
+
+              const isSweetSpot = model.id === 'deepseek-v3' || model.id === 'gemini-1-5-flash' || model.id === 'deepseek-r1';
+
+              return (
+                <div
+                  key={model.id}
+                  style={{ left: `${leftPercent}%`, top: `${topPercent}%` }}
+                  className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-10"
+                  onClick={() => setSelectedModel(model)}
+                >
+                  {/* Point Ring & Glow */}
+                  <div
+                    className={`w-4 h-4 rounded-full flex items-center justify-center transition-transform group-hover:scale-150 ${
+                      isSweetSpot
+                        ? 'bg-emerald-500 shadow-md ring-4 ring-emerald-200'
+                        : 'bg-indigo-600 shadow-sm ring-2 ring-indigo-200'
+                    }`}
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                  </div>
+
+                  {/* Label */}
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 whitespace-nowrap text-[11px] font-bold text-slate-800 bg-white/90 px-1.5 py-0.5 rounded shadow-xs border border-slate-200 pointer-events-none group-hover:border-indigo-400 group-hover:text-indigo-600 transition-colors">
+                    {model.name}
+                  </span>
+
+                  {/* Hover Tooltip */}
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2.5 rounded-xl bg-slate-900 text-white text-xs whitespace-nowrap shadow-xl z-30 pointer-events-none">
+                    <div className="font-bold text-white mb-0.5">{model.name}</div>
+                    <div className="text-[11px] text-slate-300">
+                      Blended: <span className="font-mono text-emerald-400 font-bold">${price.toFixed(2)}/1M</span>
+                    </div>
+                    <div className="text-[11px] text-slate-300">
+                      Intelligence Index: <span className="font-mono font-bold text-indigo-300">{score}/100</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <div className="absolute w-full top-2/3 border-b border-white/5 flex justify-between text-xs text-slate-600 -mt-2">
-            <span>Score: 85 (General Production Workhorse)</span>
-          </div>
-          <div className="absolute w-full bottom-0 border-b border-white/5 flex justify-between text-xs text-slate-600 -mt-2">
-            <span>Score: 78 (Fast Classification)</span>
+
+          {/* Bottom X-Axis Guide */}
+          <div className="absolute bottom-2 left-6 right-6 flex justify-between text-[10px] text-slate-400 font-mono pointer-events-none border-t border-slate-100 pt-1">
+            <span>$0.10 / 1M (Ultra Cheap)</span>
+            <span>$1.00 / 1M</span>
+            <span>$5.00 / 1M</span>
+            <span>$15.00+ / 1M (Frontier)</span>
           </div>
         </div>
-
-        {/* Scatter Points */}
-        {filteredData.map((item) => {
-          const { x, y } = getCoords(item.blendedCostPer1M, item.intelligenceScore);
-          const isHovered = hoveredModel?.model.id === item.model.id;
-
-          return (
-            <div
-              key={item.model.id}
-              style={{ left: `${x}%`, top: `${y}%` }}
-              onMouseEnter={() => setHoveredModel(item)}
-              onMouseLeave={() => setHoveredModel(null)}
-              className="absolute -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-10"
-            >
-              <div
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-mono transition-all transform duration-150 ${
-                  isHovered
-                    ? 'scale-110 z-30 bg-indigo-600 text-white border-white ring-4 ring-indigo-500/30'
-                    : item.isParetoFrontier
-                    ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/60 shadow-sm'
-                    : 'bg-[#08090a] text-slate-300 border-white/10 hover:border-white/40'
-                }`}
-              >
-                <ProviderIcon provider={item.model.provider} className="w-3.5 h-3.5" />
-                <span className="font-semibold">{item.model.name}</span>
-                <span className="text-slate-400 text-xs">
-                  ${item.blendedCostPer1M.toFixed(2)}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-
-        {/* Hover Tooltip Overlay */}
-        {hoveredModel && (
-          <div className="absolute bottom-6 left-6 z-40 p-4 rounded-xl surface-card border border-indigo-500/40 shadow-2xl max-w-xs animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center gap-2 mb-1.5">
-              <ProviderIcon provider={hoveredModel.model.provider} className="w-4 h-4" />
-              <span className="font-bold text-white text-sm">{hoveredModel.model.name}</span>
-            </div>
-            <div className="space-y-1 text-xs text-slate-300 font-mono">
-              <div className="flex justify-between">
-                <span>Intelligence Benchmark:</span>
-                <span className="text-indigo-400 font-bold">{hoveredModel.intelligenceScore}/100</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Input / 1M:</span>
-                <span className="text-white">${hoveredModel.model.inputCostPer1M}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Output / 1M:</span>
-                <span className="text-white">${hoveredModel.model.outputCostPer1M}</span>
-              </div>
-              <div className="flex justify-between pt-1 border-t border-white/10">
-                <span>Context Window:</span>
-                <span className="text-white">{hoveredModel.model.contextWindow.toLocaleString()} tokens</span>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );

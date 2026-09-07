@@ -1,387 +1,515 @@
 export interface AIModel {
   id: string;
+  slug: string;
   name: string;
   provider: 'OpenAI' | 'Anthropic' | 'Google' | 'DeepSeek' | 'Meta (Hosted)' | 'Mistral' | 'Cohere';
   providerSlug: string;
   contextWindow: number; // in tokens
   maxOutput: number; // in tokens
-  inputCostPer1M: number; // in USD per 1M tokens
-  outputCostPer1M: number; // in USD per 1M tokens
-  cachedInputCostPer1M?: number; // in USD per 1M tokens
+  inputPricePerMillion: number; // in USD per 1M tokens
+  outputPricePerMillion: number; // in USD per 1M tokens
+  cachedInputPricePerMillion?: number; // in USD per 1M tokens
+  // Compatibility aliases
+  inputCostPer1M: number;
+  outputCostPer1M: number;
+  cachedInputCostPer1M?: number;
   batchDiscountPercentage?: number; // percentage discount (e.g. 50)
+  typicalSpeedTokensPerSec: number;
+  speedTokensPerSec?: number;
   latencyScore: 'Ultra-Fast' | 'Fast' | 'Standard' | 'Reasoning (Slow)';
   qualityTier: 'Flagship / Frontier' | 'High-Efficiency' | 'Lightweight / Fast' | 'Reasoning Heavy';
+  category: 'frontier' | 'fast' | 'reasoning' | 'open-weights';
   knowledgeCutoff: string;
   description: string;
-  recommendedFor: string[];
+  recommended?: boolean;
   isOpenWeights?: boolean;
-  speedTokensPerSec?: number;
-  benchmarks?: {
-    mmlu?: number;
-    code?: number;
-    math?: number;
-  };
+  recommendedFor: string[];
 }
 
 export interface GPUInstance {
   id: string;
-  gpuName: string;
-  name?: string;
+  name: string;
+  gpuName?: string;
   provider: string;
-  vramGB: number;
-  hourlyRate: number; // USD/hr
-  hourlyRateUSD: number;
-  estimatedTokensPerSec: number; // for 70B or 8B model throughput
+  vramGb: number;
+  vramGB?: number;
+  hourlyCost: number; // USD/hr
+  hourlyRate?: number;
+  hourlyRateUSD?: number;
+  monthlyCostWithOverhead: number;
+  estimatedTokensPerSec: number;
   optimalModelSize: string;
 }
+
+export interface WorkloadPreset {
+  id: string;
+  name: string;
+  desc: string;
+  requestsPerMonth: number;
+  inputTokensPerReq: number;
+  outputTokensPerReq: number;
+  cachingPercentage: number;
+  batchDiscount: boolean;
+}
+
+export const WORKLOAD_PRESETS: WorkloadPreset[] = [
+  {
+    id: 'ai-chat-saas',
+    name: 'B2B AI Chatbot',
+    desc: '500k reqs · 1.5k in / 600 out · 40% cache',
+    requestsPerMonth: 500_000,
+    inputTokensPerReq: 1_500,
+    outputTokensPerReq: 600,
+    cachingPercentage: 40,
+    batchDiscount: false,
+  },
+  {
+    id: 'agentic-loop',
+    name: 'Autonomous Agent',
+    desc: '200k reqs · 8k in / 1.2k out · 75% cache',
+    requestsPerMonth: 200_000,
+    inputTokensPerReq: 8_000,
+    outputTokensPerReq: 1_200,
+    cachingPercentage: 75,
+    batchDiscount: false,
+  },
+  {
+    id: 'batch-extraction',
+    name: 'Offline Doc OCR',
+    desc: '2M reqs · 3k in / 300 out · 50% batch',
+    requestsPerMonth: 2_000_000,
+    inputTokensPerReq: 3_000,
+    outputTokensPerReq: 300,
+    cachingPercentage: 10,
+    batchDiscount: true,
+  },
+  {
+    id: 'code-review',
+    name: 'Code Review Bot',
+    desc: '100k reqs · 16k in / 1.5k out · 60% cache',
+    requestsPerMonth: 100_000,
+    inputTokensPerReq: 16_000,
+    outputTokensPerReq: 1_500,
+    cachingPercentage: 60,
+    batchDiscount: false,
+  },
+  {
+    id: 'lightweight-classifier',
+    name: 'Intent Router',
+    desc: '5M reqs · 300 in / 50 out · 0% cache',
+    requestsPerMonth: 5_000_000,
+    inputTokensPerReq: 300,
+    outputTokensPerReq: 50,
+    cachingPercentage: 0,
+    batchDiscount: false,
+  },
+];
 
 export const AI_MODELS: AIModel[] = [
   // OpenAI
   {
     id: 'gpt-4o',
+    slug: 'gpt-4o',
     name: 'GPT-4o (Omni)',
     provider: 'OpenAI',
     providerSlug: 'openai',
     contextWindow: 128000,
     maxOutput: 16384,
+    inputPricePerMillion: 2.50,
+    outputPricePerMillion: 10.00,
+    cachedInputPricePerMillion: 1.25,
     inputCostPer1M: 2.50,
     outputCostPer1M: 10.00,
     cachedInputCostPer1M: 1.25,
     batchDiscountPercentage: 50,
+    typicalSpeedTokensPerSec: 110,
+    speedTokensPerSec: 110,
     latencyScore: 'Fast',
     qualityTier: 'Flagship / Frontier',
+    category: 'frontier',
     knowledgeCutoff: 'Oct 2023',
     description: 'OpenAIs flagship multimodal model for high-intelligence text, vision, and complex reasoning.',
+    recommended: true,
     recommendedFor: ['Complex reasoning', 'Customer support bots', 'Data extraction', 'Multimodal analysis'],
-    benchmarks: { mmlu: 88.7, code: 90.2, math: 76.6 }
   },
   {
     id: 'gpt-4o-mini',
+    slug: 'gpt-4o-mini',
     name: 'GPT-4o mini',
     provider: 'OpenAI',
     providerSlug: 'openai',
     contextWindow: 128000,
     maxOutput: 16384,
+    inputPricePerMillion: 0.15,
+    outputPricePerMillion: 0.60,
+    cachedInputPricePerMillion: 0.075,
     inputCostPer1M: 0.15,
     outputCostPer1M: 0.60,
     cachedInputCostPer1M: 0.075,
     batchDiscountPercentage: 50,
+    typicalSpeedTokensPerSec: 160,
+    speedTokensPerSec: 160,
     latencyScore: 'Ultra-Fast',
     qualityTier: 'Lightweight / Fast',
+    category: 'fast',
     knowledgeCutoff: 'Oct 2023',
-    description: 'High-speed, ultra low-cost model replacing GPT-3.5 Turbo with superior intelligence.',
-    recommendedFor: ['High-volume classification', 'Summarization', 'Simple agents', 'Content moderation'],
-    benchmarks: { mmlu: 82.0, code: 87.0, math: 70.2 }
+    description: 'Ultra-low-cost, high-speed lightweight model for high-volume pipelines.',
+    recommendedFor: ['Lightweight classification', 'Content summarization', 'High-volume ETL'],
   },
   {
     id: 'o1',
+    slug: 'o1',
     name: 'OpenAI o1',
     provider: 'OpenAI',
     providerSlug: 'openai',
     contextWindow: 200000,
     maxOutput: 100000,
+    inputPricePerMillion: 15.00,
+    outputPricePerMillion: 60.00,
+    cachedInputPricePerMillion: 7.50,
     inputCostPer1M: 15.00,
     outputCostPer1M: 60.00,
     cachedInputCostPer1M: 7.50,
     batchDiscountPercentage: 50,
+    typicalSpeedTokensPerSec: 35,
+    speedTokensPerSec: 35,
     latencyScore: 'Reasoning (Slow)',
     qualityTier: 'Reasoning Heavy',
+    category: 'reasoning',
     knowledgeCutoff: 'Oct 2023',
-    description: 'Deep chain-of-thought reasoning model for complex STEM, coding architectures, and mathematics.',
-    recommendedFor: ['Complex code synthesis', 'Mathematical proof', 'Multi-step planning', 'Scientific research'],
-    benchmarks: { mmlu: 91.8, code: 93.4, math: 94.8 }
+    description: 'Frontier reasoning model using deep reinforcement learning chain-of-thought for competitive math and coding.',
+    recommendedFor: ['Complex math proof', 'Architecture design', 'Multi-step vulnerability analysis'],
   },
   {
-    id: 'o1-mini',
-    name: 'OpenAI o1-mini',
+    id: 'o3-mini',
+    slug: 'o3-mini',
+    name: 'OpenAI o3-mini',
     provider: 'OpenAI',
     providerSlug: 'openai',
-    contextWindow: 128000,
-    maxOutput: 65536,
-    inputCostPer1M: 3.00,
-    outputCostPer1M: 12.00,
-    cachedInputCostPer1M: 1.50,
+    contextWindow: 200000,
+    maxOutput: 100000,
+    inputPricePerMillion: 1.10,
+    outputPricePerMillion: 4.40,
+    cachedInputPricePerMillion: 0.55,
+    inputCostPer1M: 1.10,
+    outputCostPer1M: 4.40,
+    cachedInputCostPer1M: 0.55,
     batchDiscountPercentage: 50,
+    typicalSpeedTokensPerSec: 75,
+    speedTokensPerSec: 75,
     latencyScore: 'Fast',
     qualityTier: 'Reasoning Heavy',
+    category: 'reasoning',
     knowledgeCutoff: 'Oct 2023',
-    description: 'Cost-efficient reasoning model optimized for programming, STEM, and quantitative analysis.',
-    recommendedFor: ['Code debugging', 'Algorithm optimization', 'Math problem solving'],
-    benchmarks: { mmlu: 85.2, code: 92.4, math: 90.0 }
+    description: 'Cost-efficient STEM reasoning model with selectable reasoning effort knobs.',
+    recommended: true,
+    recommendedFor: ['High-volume code synthesis', 'Automated test generation', 'Technical problem solving'],
   },
 
   // Anthropic
   {
     id: 'claude-3-5-sonnet',
+    slug: 'claude-3-5-sonnet',
     name: 'Claude 3.5 Sonnet',
     provider: 'Anthropic',
     providerSlug: 'anthropic',
     contextWindow: 200000,
     maxOutput: 8192,
+    inputPricePerMillion: 3.00,
+    outputPricePerMillion: 15.00,
+    cachedInputPricePerMillion: 0.30,
     inputCostPer1M: 3.00,
     outputCostPer1M: 15.00,
-    cachedInputCostPer1M: 0.30, // Prompt caching 90% discount on read
+    cachedInputCostPer1M: 0.30,
     batchDiscountPercentage: 50,
+    typicalSpeedTokensPerSec: 90,
+    speedTokensPerSec: 90,
     latencyScore: 'Fast',
     qualityTier: 'Flagship / Frontier',
+    category: 'frontier',
     knowledgeCutoff: 'Apr 2024',
-    description: 'Industry benchmark for software engineering, nuance comprehension, and agentic workflows.',
-    recommendedFor: ['Autonomous coding agents', 'Complex document analysis', 'Technical writing', 'Tool calling'],
-    benchmarks: { mmlu: 88.3, code: 93.7, math: 78.3 }
+    description: 'The industry-standard coding and analytical engine with 90% prompt cache discounts.',
+    recommended: true,
+    recommendedFor: ['Software engineering', 'Agentic workflow orchestration', 'Nuanced copywriting'],
   },
   {
     id: 'claude-3-5-haiku',
+    slug: 'claude-3-5-haiku',
     name: 'Claude 3.5 Haiku',
     provider: 'Anthropic',
     providerSlug: 'anthropic',
     contextWindow: 200000,
     maxOutput: 8192,
+    inputPricePerMillion: 0.80,
+    outputPricePerMillion: 4.00,
+    cachedInputPricePerMillion: 0.08,
     inputCostPer1M: 0.80,
     outputCostPer1M: 4.00,
     cachedInputCostPer1M: 0.08,
     batchDiscountPercentage: 50,
+    typicalSpeedTokensPerSec: 140,
+    speedTokensPerSec: 140,
     latencyScore: 'Ultra-Fast',
-    qualityTier: 'Lightweight / Fast',
+    qualityTier: 'High-Efficiency',
+    category: 'fast',
     knowledgeCutoff: 'Jul 2024',
-    description: 'Lightning-fast execution matching Claude 3 Opus intelligence at high-throughput economics.',
-    recommendedFor: ['Interactive chat', 'High-throughput parsing', 'Lightweight coding assistance'],
-    benchmarks: { mmlu: 80.9, code: 88.1, math: 69.4 }
-  },
-  {
-    id: 'claude-3-opus',
-    name: 'Claude 3 Opus',
-    provider: 'Anthropic',
-    providerSlug: 'anthropic',
-    contextWindow: 200000,
-    maxOutput: 4096,
-    inputCostPer1M: 15.00,
-    outputCostPer1M: 75.00,
-    cachedInputCostPer1M: 1.50,
-    batchDiscountPercentage: 50,
-    latencyScore: 'Standard',
-    qualityTier: 'Flagship / Frontier',
-    knowledgeCutoff: 'Aug 2023',
-    description: 'Deep philosophical, highly articulate synthesis engine for mission-critical enterprise tasks.',
-    recommendedFor: ['Deep literary writing', 'Complex policy review', 'Executive summaries'],
-    benchmarks: { mmlu: 86.8, code: 84.9, math: 60.1 }
-  },
-
-  // Google
-  {
-    id: 'gemini-1-5-pro',
-    name: 'Gemini 1.5 Pro',
-    provider: 'Google',
-    providerSlug: 'google',
-    contextWindow: 2000000,
-    maxOutput: 8192,
-    inputCostPer1M: 1.25, // <=128k tokens rate (or $2.50 for >128k)
-    outputCostPer1M: 5.00,
-    cachedInputCostPer1M: 0.3125,
-    batchDiscountPercentage: 50,
-    latencyScore: 'Standard',
-    qualityTier: 'Flagship / Frontier',
-    knowledgeCutoff: 'Nov 2024',
-    description: '2 Million token massive context window champion. Analyzes full codebases, hours of audio, and books.',
-    recommendedFor: ['Full repository indexing', 'Hour-long video QA', 'Massive PDF audits'],
-    benchmarks: { mmlu: 85.9, code: 84.1, math: 67.7 }
-  },
-  {
-    id: 'gemini-1-5-flash',
-    name: 'Gemini 1.5 Flash',
-    provider: 'Google',
-    providerSlug: 'google',
-    contextWindow: 1000000,
-    maxOutput: 8192,
-    inputCostPer1M: 0.075,
-    outputCostPer1M: 0.30,
-    cachedInputCostPer1M: 0.01875,
-    batchDiscountPercentage: 50,
-    latencyScore: 'Ultra-Fast',
-    qualityTier: 'Lightweight / Fast',
-    knowledgeCutoff: 'Nov 2024',
-    description: 'Ultra-budget high-speed 1M context model built for scale and multimodal tasks.',
-    recommendedFor: ['Video transcription parsing', 'High-volume web scraping extraction', 'Real-time apps'],
-    benchmarks: { mmlu: 78.9, code: 74.3, math: 55.4 }
-  },
-  {
-    id: 'gemini-2-0-flash',
-    name: 'Gemini 2.0 Flash',
-    provider: 'Google',
-    providerSlug: 'google',
-    contextWindow: 1000000,
-    maxOutput: 8192,
-    inputCostPer1M: 0.10,
-    outputCostPer1M: 0.40,
-    cachedInputCostPer1M: 0.025,
-    batchDiscountPercentage: 50,
-    latencyScore: 'Ultra-Fast',
-    qualityTier: 'Lightweight / Fast',
-    knowledgeCutoff: 'Dec 2024',
-    description: 'Next-gen real-time multimodal reasoning with native tool use and ultra-low latency.',
-    recommendedFor: ['Live voice assistants', 'Real-time vision streaming', 'Interactive devtools'],
-    benchmarks: { mmlu: 84.5, code: 86.2, math: 69.8 }
+    description: 'Sub-second response model surpassing Claude 3 Opus on standard benchmarks.',
+    recommendedFor: ['Real-time chatbots', 'Interactive code autocomplete', 'Fast triage'],
   },
 
   // DeepSeek
   {
     id: 'deepseek-v3',
-    name: 'DeepSeek V3',
+    slug: 'deepseek-v3',
+    name: 'DeepSeek V3 (671B MoE)',
     provider: 'DeepSeek',
     providerSlug: 'deepseek',
     contextWindow: 64000,
     maxOutput: 8192,
+    inputPricePerMillion: 0.14,
+    outputPricePerMillion: 0.28,
+    cachedInputPricePerMillion: 0.014,
     inputCostPer1M: 0.14,
     outputCostPer1M: 0.28,
-    cachedInputCostPer1M: 0.014, // 90% cache hit discount
+    cachedInputCostPer1M: 0.014,
     batchDiscountPercentage: 0,
+    typicalSpeedTokensPerSec: 85,
+    speedTokensPerSec: 85,
     latencyScore: 'Fast',
-    qualityTier: 'High-Efficiency',
+    qualityTier: 'Flagship / Frontier',
+    category: 'frontier',
     knowledgeCutoff: 'Dec 2024',
-    description: '671B MoE architecture delivering frontier-grade capability at unprecedented cost efficiency.',
-    recommendedFor: ['Cost-sensitive production APIs', 'Large scale data transformation', 'Open-weight workflows'],
-    benchmarks: { mmlu: 88.5, code: 89.0, math: 75.9 }
+    description: 'Groundbreaking 671B parameter Mixture-of-Experts model delivering frontier performance at commodity pricing.',
+    recommended: true,
+    isOpenWeights: true,
+    recommendedFor: ['Large-scale synthetic data generation', 'Cost-sensitive SaaS backends', 'General knowledge extraction'],
   },
   {
     id: 'deepseek-r1',
-    name: 'DeepSeek R1',
+    slug: 'deepseek-r1',
+    name: 'DeepSeek R1 (Reasoning)',
     provider: 'DeepSeek',
     providerSlug: 'deepseek',
     contextWindow: 64000,
     maxOutput: 8192,
+    inputPricePerMillion: 0.55,
+    outputPricePerMillion: 2.19,
+    cachedInputPricePerMillion: 0.14,
     inputCostPer1M: 0.55,
     outputCostPer1M: 2.19,
     cachedInputCostPer1M: 0.14,
     batchDiscountPercentage: 0,
+    typicalSpeedTokensPerSec: 45,
+    speedTokensPerSec: 45,
     latencyScore: 'Reasoning (Slow)',
     qualityTier: 'Reasoning Heavy',
+    category: 'reasoning',
     knowledgeCutoff: 'Dec 2024',
-    description: 'Open reasoning model matching OpenAI o1 on math, coding, and logical deductions.',
-    recommendedFor: ['Complex math proofing', 'Code architecture review', 'Hard logic puzzles'],
-    benchmarks: { mmlu: 90.8, code: 92.5, math: 93.1 }
+    description: 'Open-weights reasoning model matching OpenAI o1 on math, coding, and logical deduction at 1/20th the price.',
+    recommended: true,
+    isOpenWeights: true,
+    recommendedFor: ['Autonomous bug bounty PoCs', 'Complex algorithms', 'Deep mathematical analysis'],
   },
 
-  // Meta Llama (Hosted on Together/Fireworks/Groq)
+  // Google
+  {
+    id: 'gemini-1-5-pro',
+    slug: 'gemini-1-5-pro',
+    name: 'Gemini 1.5 Pro (2M Ctx)',
+    provider: 'Google',
+    providerSlug: 'google',
+    contextWindow: 2097152,
+    maxOutput: 8192,
+    inputPricePerMillion: 1.25,
+    outputPricePerMillion: 5.00,
+    cachedInputPricePerMillion: 0.3125,
+    inputCostPer1M: 1.25,
+    outputCostPer1M: 5.00,
+    cachedInputCostPer1M: 0.3125,
+    batchDiscountPercentage: 50,
+    typicalSpeedTokensPerSec: 75,
+    speedTokensPerSec: 75,
+    latencyScore: 'Standard',
+    qualityTier: 'Flagship / Frontier',
+    category: 'frontier',
+    knowledgeCutoff: 'May 2024',
+    description: 'Massive 2-million token context window capable of ingesting entire video files, audio, and large repositories.',
+    recommendedFor: ['Full repository audits', 'Long video/audio analysis', 'Cross-document correlation'],
+  },
+  {
+    id: 'gemini-1-5-flash',
+    slug: 'gemini-1-5-flash',
+    name: 'Gemini 1.5 Flash (1M Ctx)',
+    provider: 'Google',
+    providerSlug: 'google',
+    contextWindow: 1048576,
+    maxOutput: 8192,
+    inputPricePerMillion: 0.075,
+    outputPricePerMillion: 0.30,
+    cachedInputPricePerMillion: 0.01875,
+    inputCostPer1M: 0.075,
+    outputCostPer1M: 0.30,
+    cachedInputCostPer1M: 0.01875,
+    batchDiscountPercentage: 50,
+    typicalSpeedTokensPerSec: 170,
+    speedTokensPerSec: 170,
+    latencyScore: 'Ultra-Fast',
+    qualityTier: 'Lightweight / Fast',
+    category: 'fast',
+    knowledgeCutoff: 'May 2024',
+    description: 'High-speed multimodal workhorse with 1M context at sub-dime unit pricing.',
+    recommended: true,
+    recommendedFor: ['Real-time streaming agent tools', 'Video frame parsing', 'Fast structured extraction'],
+  },
+
+  // Meta Open Weights
   {
     id: 'llama-3-3-70b',
-    name: 'Llama 3.3 70B (Instruct)',
+    slug: 'llama-3-3-70b',
+    name: 'Llama 3.3 70B (Hosted)',
     provider: 'Meta (Hosted)',
     providerSlug: 'meta',
     contextWindow: 128000,
-    maxOutput: 4096,
-    inputCostPer1M: 0.70,
-    outputCostPer1M: 0.90,
-    cachedInputCostPer1M: 0.35,
-    batchDiscountPercentage: 30,
-    latencyScore: 'Ultra-Fast',
+    maxOutput: 8192,
+    inputPricePerMillion: 0.59,
+    outputPricePerMillion: 0.79,
+    inputCostPer1M: 0.59,
+    outputCostPer1M: 0.79,
+    batchDiscountPercentage: 0,
+    typicalSpeedTokensPerSec: 95,
+    speedTokensPerSec: 95,
+    latencyScore: 'Fast',
     qualityTier: 'High-Efficiency',
+    category: 'open-weights',
     knowledgeCutoff: 'Dec 2024',
-    description: 'Meta flagship open weights model rivaling proprietary GPT-4 tier intelligence.',
-    recommendedFor: ['Self-hosting alternative', 'Enterprise privacy pipelines', 'Custom fine-tuning'],
-    benchmarks: { mmlu: 86.4, code: 81.7, math: 68.3 }
+    description: 'Meta flagship open model offering GPT-4 class capabilities at open-weights accessibility.',
+    isOpenWeights: true,
+    recommendedFor: ['Private deployments', 'Custom fine-tunes', 'Unrestricted tool calling'],
   },
   {
     id: 'llama-3-1-405b',
-    name: 'Llama 3.1 405B',
+    slug: 'llama-3-1-405b',
+    name: 'Llama 3.1 405B (Hosted)',
     provider: 'Meta (Hosted)',
     providerSlug: 'meta',
     contextWindow: 128000,
     maxOutput: 4096,
-    inputCostPer1M: 3.50,
-    outputCostPer1M: 3.50,
-    cachedInputCostPer1M: 1.75,
-    batchDiscountPercentage: 30,
+    inputPricePerMillion: 2.40,
+    outputPricePerMillion: 2.40,
+    inputCostPer1M: 2.40,
+    outputCostPer1M: 2.40,
+    batchDiscountPercentage: 0,
+    typicalSpeedTokensPerSec: 40,
+    speedTokensPerSec: 40,
     latencyScore: 'Standard',
     qualityTier: 'Flagship / Frontier',
-    knowledgeCutoff: 'Jul 2024',
-    description: 'The largest open-weights foundation model ever built for synthetic data generation and distillation.',
-    recommendedFor: ['Model distillation', 'Dataset generation', 'Complex multi-domain research'],
-    benchmarks: { mmlu: 88.6, code: 89.0, math: 73.8 }
+    category: 'open-weights',
+    knowledgeCutoff: 'Dec 2023',
+    description: 'First frontier-class 405B parameter open-weights model capable of synthetic data distillation.',
+    isOpenWeights: true,
+    recommendedFor: ['Teacher model data distillation', 'High-complexity synthesis', 'Offline private inference'],
   },
 
   // Mistral
   {
-    id: 'mistral-large-2407',
+    id: 'mistral-large',
+    slug: 'mistral-large',
     name: 'Mistral Large 2',
     provider: 'Mistral',
     providerSlug: 'mistral',
     contextWindow: 128000,
-    maxOutput: 4096,
+    maxOutput: 8192,
+    inputPricePerMillion: 2.00,
+    outputPricePerMillion: 6.00,
     inputCostPer1M: 2.00,
     outputCostPer1M: 6.00,
-    cachedInputCostPer1M: 1.00,
-    batchDiscountPercentage: 40,
+    batchDiscountPercentage: 50,
+    typicalSpeedTokensPerSec: 80,
+    speedTokensPerSec: 80,
     latencyScore: 'Fast',
     qualityTier: 'Flagship / Frontier',
-    knowledgeCutoff: 'Jul 2024',
-    description: 'European frontier model with top-tier multilingual capabilities and code mastery.',
-    recommendedFor: ['Multilingual applications (French, German, Spanish)', 'Strict European compliance'],
-    benchmarks: { mmlu: 84.0, code: 86.0, math: 68.0 }
+    category: 'frontier',
+    knowledgeCutoff: 'Nov 2024',
+    description: 'European frontier model with state-of-the-art multilingual reasoning and code synthesis.',
+    recommendedFor: ['European GDPR sovereignty', 'Multilingual workflows', 'Function calling'],
   },
   {
     id: 'codestral',
-    name: 'Codestral (Mistral)',
+    slug: 'codestral',
+    name: 'Codestral 2501',
     provider: 'Mistral',
     providerSlug: 'mistral',
-    contextWindow: 32000,
-    maxOutput: 4096,
+    contextWindow: 256000,
+    maxOutput: 8192,
+    inputPricePerMillion: 0.30,
+    outputPricePerMillion: 0.90,
     inputCostPer1M: 0.30,
     outputCostPer1M: 0.90,
-    cachedInputCostPer1M: 0.15,
-    batchDiscountPercentage: 40,
+    batchDiscountPercentage: 0,
+    typicalSpeedTokensPerSec: 130,
+    speedTokensPerSec: 130,
     latencyScore: 'Ultra-Fast',
     qualityTier: 'High-Efficiency',
-    knowledgeCutoff: 'May 2024',
-    description: 'Specialized code completion and generation model supporting 80+ programming languages.',
-    recommendedFor: ['IDE autocomplete', 'Fill-in-the-middle (FIM) code completions', 'Unit test generation'],
-    benchmarks: { mmlu: 75.0, code: 91.6, math: 64.0 }
-  }
+    category: 'fast',
+    knowledgeCutoff: 'Jan 2025',
+    description: 'Specialized 256k context model purpose-built for code generation, fill-in-the-middle, and refactoring.',
+    recommendedFor: ['IDE autocomplete', 'Fill-in-the-middle editing', 'Fast unit test synthesis'],
+  },
 ];
 
 export const GPU_INSTANCES: GPUInstance[] = [
   {
-    id: 'rtx-4090',
-    gpuName: 'NVIDIA RTX 4090 (24GB)',
-    name: 'NVIDIA RTX 4090 (24GB)',
-    provider: 'RunPod / Vast.ai',
-    vramGB: 24,
-    hourlyRate: 0.44,
-    hourlyRateUSD: 0.44,
-    estimatedTokensPerSec: 140, // For 8B quantized model (FP8/AWQ)
-    optimalModelSize: '8B – 14B Q4/FP8'
+    id: '8x-h100-sxm5',
+    name: '8x NVIDIA H100 SXM5 (640GB VRAM)',
+    provider: 'RunPod / Lambda Cloud',
+    vramGb: 640,
+    vramGB: 640,
+    hourlyCost: 24.80,
+    hourlyRate: 24.80,
+    hourlyRateUSD: 24.80,
+    monthlyCostWithOverhead: 21724, // 730 hrs * 24.80 + 20% ops/egress
+    estimatedTokensPerSec: 900,
+    optimalModelSize: 'Llama 3.3 70B / DeepSeek MoE (Tensor Parallel 8)',
   },
   {
-    id: 'l40s',
-    gpuName: 'NVIDIA L40S (48GB)',
-    name: 'NVIDIA L40S (48GB)',
-    provider: 'RunPod / Lambda Labs',
-    vramGB: 48,
-    hourlyRate: 0.85,
-    hourlyRateUSD: 0.85,
-    estimatedTokensPerSec: 95,
-    optimalModelSize: '32B – 70B Quantized'
+    id: '8x-a100-80gb',
+    name: '8x NVIDIA A100 SXM4 (640GB VRAM)',
+    provider: 'Vast.ai / RunPod',
+    vramGb: 640,
+    vramGB: 640,
+    hourlyCost: 14.40,
+    hourlyRate: 14.40,
+    hourlyRateUSD: 14.40,
+    monthlyCostWithOverhead: 12614,
+    estimatedTokensPerSec: 520,
+    optimalModelSize: 'Llama 3.3 70B (FP8 / AWQ Quantized)',
   },
   {
-    id: 'a100-80gb',
-    gpuName: 'NVIDIA A100 SXM4 (80GB)',
-    name: 'NVIDIA A100 SXM4 (80GB)',
-    provider: 'Lambda / GCP / RunPod',
+    id: '1x-h100-pcie',
+    name: '1x NVIDIA H100 PCIe (80GB VRAM)',
+    provider: 'Lambda Cloud',
+    vramGb: 80,
     vramGB: 80,
-    hourlyRate: 1.49,
-    hourlyRateUSD: 1.49,
-    estimatedTokensPerSec: 75,
-    optimalModelSize: '70B FP8 or vLLM Batch'
-  },
-  {
-    id: 'h100-sxm5',
-    gpuName: 'NVIDIA H100 SXM5 (80GB)',
-    name: 'NVIDIA H100 SXM5 (80GB)',
-    provider: 'RunPod / Lambda / CoreWeave',
-    vramGB: 80,
+    hourlyCost: 2.89,
     hourlyRate: 2.89,
     hourlyRateUSD: 2.89,
-    estimatedTokensPerSec: 190,
-    optimalModelSize: '70B – 405B MoE vLLM'
-  }
+    monthlyCostWithOverhead: 2531,
+    estimatedTokensPerSec: 180,
+    optimalModelSize: 'Llama 3.1 8B / Mistral NeMo / Qwen 2.5 14B',
+  },
+  {
+    id: '1x-rtx-4090',
+    name: '1x NVIDIA RTX 4090 (24GB VRAM)',
+    provider: 'Vast.ai Community',
+    vramGb: 24,
+    vramGB: 24,
+    hourlyCost: 0.44,
+    hourlyRate: 0.44,
+    hourlyRateUSD: 0.44,
+    monthlyCostWithOverhead: 385,
+    estimatedTokensPerSec: 75,
+    optimalModelSize: 'Llama 3.1 8B (4-bit GPTQ / EXL2)',
+  },
 ];
 
 export interface PopularComparisonPair {
@@ -394,25 +522,32 @@ export interface PopularComparisonPair {
 
 export const POPULAR_COMPARISONS: PopularComparisonPair[] = [
   {
-    slug: 'gpt-4o-vs-claude-3-5-sonnet',
+    slug: 'claude-3-5-sonnet-vs-deepseek-v3',
+    modelAId: 'claude-3-5-sonnet',
+    modelBId: 'deepseek-v3',
+    title: 'Claude 3.5 Sonnet vs DeepSeek V3 Cost Comparison',
+    subtitle: 'Evaluate total annual savings switching from Anthropic flagship to DeepSeek 671B MoE.'
+  },
+  {
+    slug: 'gpt-4o-vs-deepseek-v3',
     modelAId: 'gpt-4o',
-    modelBId: 'claude-3-5-sonnet',
-    title: 'GPT-4o vs Claude 3.5 Sonnet Cost & Pricing Comparison',
-    subtitle: 'Head-to-head token economics, prompt caching discounts, coding capability, and annual cost projections.'
+    modelBId: 'deepseek-v3',
+    title: 'GPT-4o vs DeepSeek V3 Cost & Pricing Comparison',
+    subtitle: 'Compare token unit economics between OpenAIs multimodal flagship and DeepSeek V3.'
   },
   {
-    slug: 'deepseek-v3-vs-gpt-4o',
-    modelAId: 'deepseek-v3',
-    modelBId: 'gpt-4o',
-    title: 'DeepSeek V3 vs GPT-4o Token Cost Comparison',
-    subtitle: 'Calculate your savings switching from OpenAIs flagship to DeepSeek V3 671B MoE architecture.'
+    slug: 'o1-vs-deepseek-r1',
+    modelAId: 'o1',
+    modelBId: 'deepseek-r1',
+    title: 'OpenAI o1 vs DeepSeek R1 Reasoning Model Cost Calculator',
+    subtitle: 'Chain-of-thought unit economics: how much do deep reasoning steps actually cost at scale?'
   },
   {
-    slug: 'deepseek-r1-vs-o1',
-    modelAId: 'deepseek-r1',
-    modelBId: 'o1',
-    title: 'DeepSeek R1 vs OpenAI o1 Reasoning Cost Calculator',
-    subtitle: 'Compare costs of cutting-edge chain-of-thought reasoning models for math, science, and coding.'
+    slug: 'gpt-4o-mini-vs-gemini-1-5-flash',
+    modelAId: 'gpt-4o-mini',
+    modelBId: 'gemini-1-5-flash',
+    title: 'GPT-4o mini vs Gemini 1.5 Flash High-Speed Benchmark',
+    subtitle: 'Sub-dime pricing comparison for high-volume customer support and realtime agents.'
   },
   {
     slug: 'claude-3-5-haiku-vs-gpt-4o-mini',
@@ -421,18 +556,4 @@ export const POPULAR_COMPARISONS: PopularComparisonPair[] = [
     title: 'Claude 3.5 Haiku vs GPT-4o Mini Pricing Breakdown',
     subtitle: 'High-throughput lightweight model economics: which one delivers higher ROI for high-volume apps?'
   },
-  {
-    slug: 'gemini-1-5-pro-vs-claude-3-5-sonnet',
-    modelAId: 'gemini-1-5-pro',
-    modelBId: 'claude-3-5-sonnet',
-    title: 'Gemini 1.5 Pro vs Claude 3.5 Sonnet Long-Context Costs',
-    subtitle: 'Evaluate 2M token context window economics against industry-leading coding intelligence.'
-  },
-  {
-    slug: 'llama-3-3-70b-vs-gpt-4o',
-    modelAId: 'llama-3-3-70b',
-    modelBId: 'gpt-4o',
-    title: 'Llama 3.3 70B vs GPT-4o Cost & Performance',
-    subtitle: 'Hosted open weights vs proprietary API: analyze total cost of ownership across traffic tiers.'
-  }
 ];

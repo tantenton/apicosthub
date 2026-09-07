@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
-import { Layers, Database, Cpu, ShieldCheck, Zap, Play, Pause, Volume2, VolumeX, Eye } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Cpu, Zap, ShieldCheck, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function ArchitectureBanner() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState<boolean>(true);
+  const [isMuted, setIsMuted] = useState<boolean>(true);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -19,96 +20,110 @@ export default function ArchitectureBanner() {
     }
   };
 
+  const toggleMute = () => {
+    if (!videoRef.current) return;
+    videoRef.current.muted = !isMuted;
+    setIsMuted(!isMuted);
+  };
+
   return (
-    <section className="mb-14 rounded-2xl border border-white/10 surface-card overflow-hidden shadow-2xl relative">
-      <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
-        {/* Left Column: Technical Narrative */}
-        <div className="p-6 sm:p-8 lg:col-span-7 z-10">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="px-2.5 py-1 rounded-full text-xs font-semibold uppercase bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5" /> Production Strategy
-            </span>
-            <span className="text-xs text-slate-400">Unit Economics Framework</span>
+    <section className="w-full max-w-7xl px-4 sm:px-6 my-10">
+      <div className="surface-card rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-xl overflow-hidden relative">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          {/* Left Text Column */}
+          <div className="lg:col-span-6 space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-indigo-600 animate-ping" />
+              <span>Multi-Tier Neural Routing Architecture</span>
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              Slash Inference OPEX by Up to <span className="text-indigo-600">82%</span> with Cascading Model Fallbacks
+            </h2>
+
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Production systems do not route every user request to expensive frontier models. High-efficiency architectures use deterministic classifiers to handle 70% of routine queries on sub-cent models like DeepSeek V3 or Gemini 1.5 Flash, escalating only high-complexity reasoning steps to Claude 3.5 Sonnet or o1.
+            </p>
+
+            {/* Architecture Highlights Grid */}
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5 mb-1">
+                  <Zap className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Prompt KV-Caching</span>
+                </div>
+                <div className="text-[11px] text-slate-500">
+                  Cut TTFT by 40% and save up to 90% on repeated system prompts.
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5 mb-1">
+                  <Cpu className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Batch Inference</span>
+                </div>
+                <div className="text-[11px] text-slate-500">
+                  Offload asynchronous background tasks with guaranteed 50% discount.
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <a
+                href="#pareto"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5"
+              >
+                <span>Explore Pareto Frontier Matrix</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </a>
+            </div>
           </div>
 
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight leading-tight">
-            How High-Scale Engineering Teams Reduce LLM Spend by 70%
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-400 mt-2.5 leading-relaxed max-w-xl">
-            Production systems avoid routing every prompt directly to flagship models. They apply multi-tier request routing, prompt caching, and batch endpoints to control costs.
-          </p>
+          {/* Right Video Showcase Column */}
+          <div className="lg:col-span-6 relative">
+            <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-lg relative group">
+              {/* HTML5 Native Looping Video */}
+              <video
+                ref={videoRef}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-auto aspect-video object-cover"
+              >
+                <source src="/videos/neural-routing-light.webm" type="video/webm" />
+                <source src="/videos/neural-routing-light.mp4" type="video/mp4" />
+                Your browser does not support HTML5 video streaming.
+              </video>
 
-          {/* 4 Pillars Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
-            <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
-              <div className="flex items-center gap-2 text-indigo-400 text-xs font-semibold mb-1">
-                <Database className="w-3.5 h-3.5" /> 1. KV-Cache Prefix Reuse
+              {/* Video Floating Action Bar */}
+              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between p-2 rounded-xl bg-white/90 backdrop-blur-md border border-slate-200 text-xs shadow-sm">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="font-mono text-[11px] font-semibold text-slate-700">
+                    Live Circuit Simulation (720p 30fps)
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={togglePlay}
+                    className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors"
+                    title={isPlaying ? 'Pause' : 'Play'}
+                  >
+                    {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                  </button>
+
+                  <button
+                    onClick={toggleMute}
+                    className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors"
+                    title={isMuted ? 'Unmute' : 'Mute'}
+                  >
+                    {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
               </div>
-              <p className="text-xs text-slate-400 leading-normal">
-                Persist static system instructions and RAG documents in cache. Lowers input costs by 75% to 90% on Anthropic and DeepSeek.
-              </p>
             </div>
-
-            <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
-              <div className="flex items-center gap-2 text-cyan-400 text-xs font-semibold mb-1">
-                <Layers className="w-3.5 h-3.5" /> 2. Model Tier Cascading
-              </div>
-              <p className="text-xs text-slate-400 leading-normal">
-                Route classification and extraction tasks to DeepSeek V3 ($0.14/1M) or Gemini 2.0 Flash ($0.10/1M). Escalate complex reasoning as needed.
-              </p>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
-              <div className="flex items-center gap-2 text-amber-400 text-xs font-semibold mb-1">
-                <ShieldCheck className="w-3.5 h-3.5" /> 3. Asynchronous Batch APIs
-              </div>
-              <p className="text-xs text-slate-400 leading-normal">
-                Use 24-hour batch processing queues for non-realtime background evaluation runs to get standard 50% discounts.
-              </p>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
-              <div className="flex items-center gap-2 text-purple-400 text-xs font-semibold mb-1">
-                <Cpu className="w-3.5 h-3.5" /> 4. Dedicated GPU Breakeven
-              </div>
-              <p className="text-xs text-slate-400 leading-normal">
-                Deploy open weights (Llama 3.3 70B, DeepSeek R1) on rented GPU clusters once monthly volume exceeds the 350M token threshold.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: HTML5 Video Visual Render */}
-        <div className="lg:col-span-5 relative h-72 sm:h-80 lg:h-full min-h-[360px] bg-[#08090a] border-t lg:border-t-0 lg:border-l border-white/10 flex items-center justify-center overflow-hidden group">
-          <video
-            ref={videoRef}
-            autoPlay
-            loop
-            muted={isMuted}
-            playsInline
-            className="w-full h-full object-cover opacity-90 transition-opacity duration-500"
-            poster="/images/hero-architecture.png"
-          >
-            <source src="/videos/neural-routing.webm" type="video/webm" />
-            <source src="/videos/neural-routing.mp4" type="video/mp4" />
-          </video>
-
-          <div className="absolute inset-0 bg-gradient-to-t from-[#08090a] via-transparent to-transparent lg:bg-gradient-to-r lg:from-[#08090a] lg:via-transparent lg:to-transparent pointer-events-none" />
-
-          {/* Floating Video Controls */}
-          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-auto">
-            <div className="bg-[#08090a]/90 backdrop-blur-md border border-white/10 rounded-lg px-3 py-1.5 shadow-xl text-xs text-slate-300 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
-              <span>HTML5 Neural Routing Loop</span>
-            </div>
-
-            <button
-              onClick={togglePlay}
-              className="bg-[#08090a]/90 hover:bg-white/10 backdrop-blur-md border border-white/10 rounded-lg p-2 text-slate-300 hover:text-white transition-colors"
-              title={isPlaying ? 'Pause Video' : 'Play Video'}
-            >
-              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 text-indigo-400" />}
-            </button>
           </div>
         </div>
       </div>

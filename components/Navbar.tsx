@@ -2,130 +2,119 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, Calculator, GitCompare, Cpu, Table2, Github, Sparkles } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Calculator, BarChart3, Cpu, Sparkles, Menu, X, ArrowUpRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#08090a]/80 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-        
-        {/* Brand Identity */}
-        <div className="flex items-center gap-3">
-          <Link
-            href="/"
-            className="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-lg p-1"
-          >
-            <div className="w-7 h-7 rounded-lg bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
-              <Calculator className="w-4 h-4" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="font-bold text-white tracking-tight text-base">
-                APICost<span className="text-indigo-400">Hub</span>
-              </span>
-              <span className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono rounded-md bg-white/[0.05] text-slate-400 border border-white/10">
-                2026 Live
-              </span>
-            </div>
-          </Link>
-        </div>
+  const navLinks = [
+    { href: '/', label: 'Workbench', icon: Calculator },
+    { href: '/#pareto', label: 'Pareto Matrix', icon: BarChart3 },
+    { href: '/calculator/gpu-vs-api', label: 'GPU Arbitrage', icon: Cpu },
+    { href: '/pricing-table', label: 'All Models', icon: Sparkles },
+  ];
 
-        {/* Center Navigation: Desktop */}
-        <nav className="hidden md:flex items-center gap-1 text-xs font-medium text-slate-400">
-          <Link
-            href="/"
-            className="px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-          >
-            Calculator
-          </Link>
-          <Link
-            href="/#head-to-head"
-            className="px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-          >
-            Compare Models
-          </Link>
-          <Link
-            href="/calculator/gpu-vs-api"
-            className="px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-          >
-            Self-Hosted GPU
-          </Link>
-          <Link
-            href="/pricing-table"
-            className="px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-          >
-            Pricing Table
-          </Link>
+  return (
+    <header className="sticky top-0 z-50 w-full bg-white/85 backdrop-blur-md border-b border-slate-200/80 transition-all">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        {/* Brand Logo with Glowing Indicator */}
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-sm group-hover:scale-105 transition-transform">
+            <span>Σ</span>
+          </div>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5">
+              <span className="font-extrabold text-base tracking-tight text-slate-900">
+                APICost<span className="text-indigo-600">Hub</span>
+              </span>
+              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-indigo-50 text-indigo-700 rounded-md border border-indigo-200/60">
+                PRO
+              </span>
+            </div>
+            <span className="text-[10px] text-slate-500 font-medium -mt-0.5">
+              AI Unit Economics Engine
+            </span>
+          </div>
+        </Link>
+
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center gap-1">
+          {navLinks.map((link) => {
+            const Icon = link.icon;
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`relative px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  isActive
+                    ? 'text-indigo-600 font-bold bg-indigo-50/80'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{link.label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
-        {/* Right Actions & Status */}
-        <div className="flex items-center gap-3">
-          <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-full border border-white/10 bg-white/[0.03] text-xs font-mono text-slate-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-            <span>16 Models Verified</span>
+        {/* Right Action / Telemetry Button */}
+        <div className="hidden sm:flex items-center gap-3">
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-medium text-slate-600">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>March 2026 Models Live</span>
           </div>
-
           <a
             href="https://github.com/tantenton/apicosthub"
             target="_blank"
-            rel="noreferrer"
-            className="p-2 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] text-slate-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-            title="View Source on GitHub"
-            aria-label="View Source on GitHub"
+            rel="noopener noreferrer"
+            className="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-sm flex items-center gap-1 transition-all hover:-translate-y-0.5"
           >
-            <Github className="w-4 h-4" />
+            <span>GitHub</span>
+            <ArrowUpRight className="w-3 h-3 text-slate-400" />
           </a>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden min-h-[44px] min-w-[44px] p-2.5 rounded-xl border border-white/10 bg-white/[0.03] text-slate-400 hover:text-white flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-            aria-label={mobileMenuOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
-            aria-expanded={mobileMenuOpen}
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
         </div>
+
+        {/* Mobile Hamburger Button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden p-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+          aria-label="Toggle Navigation Menu"
+        >
+          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
       </div>
 
       {/* Mobile Drawer */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-b border-white/10 bg-[#08090a] px-4 py-4 space-y-2">
-          <Link
-            href="/"
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-slate-200 hover:bg-white/[0.04] min-h-[44px]"
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-1 shadow-lg"
           >
-            <Calculator className="w-4 h-4 text-indigo-400" />
-            <span>Calculator Workbench</span>
-          </Link>
-          <Link
-            href="/#head-to-head"
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-slate-200 hover:bg-white/[0.04] min-h-[44px]"
-          >
-            <GitCompare className="w-4 h-4 text-indigo-400" />
-            <span>Head-to-Head Comparison</span>
-          </Link>
-          <Link
-            href="/calculator/gpu-vs-api"
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-slate-200 hover:bg-white/[0.04] min-h-[44px]"
-          >
-            <Cpu className="w-4 h-4 text-indigo-400" />
-            <span>Self-Hosted GPU Simulator</span>
-          </Link>
-          <Link
-            href="/pricing-table"
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-slate-200 hover:bg-white/[0.04] min-h-[44px]"
-          >
-            <Table2 className="w-4 h-4 text-indigo-400" />
-            <span>Master Pricing Table</span>
-          </Link>
-        </div>
-      )}
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                >
+                  <Icon className="w-4 h-4 text-indigo-500" />
+                  <span>{link.label}</span>
+                </Link>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

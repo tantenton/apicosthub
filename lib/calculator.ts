@@ -1,16 +1,15 @@
 import { AIModel, GPUInstance, AI_MODELS } from '@/data/models';
 
-export interface CalculationParams {
-  monthlyRequests: number;
-  avgInputTokens: number;
-  avgOutputTokens: number;
-  cachedInputPercentage: number; // 0 to 100
-  enableBatchDiscount?: boolean;
+export interface WorkloadParams {
+  model?: AIModel;
+  requestsPerMonth: number;
+  inputTokensPerReq: number;
+  outputTokensPerReq: number;
+  cachingPercentage: number; // 0 to 100
   batchDiscount?: boolean;
 }
 
-export interface ModelCostResult {
-  model: AIModel;
+export interface CalculationResult {
   monthlyInputTokens: number;
   monthlyOutputTokens: number;
   monthlyTotalTokens: number;
@@ -18,71 +17,57 @@ export interface ModelCostResult {
   uncachedInputTokens: number;
   inputCostUSD: number;
   outputCostUSD: number;
-  totalMonthlyCostUSD: number;
   totalMonthlyCost: number;
-  annualCostUSD: number;
-  costPer1kRequestsUSD: number;
+  totalMonthlyCostUSD: number;
   costPer1kRequests: number;
-  effectiveCostPer1MTokensUSD: number;
-  savingsVsBaselineUSD?: number;
+  effectivePer1MTotal: number;
   savingsFromCaching: number;
 }
 
-export function calculateSingleModelCost(
-  model: AIModel,
-  params: CalculationParams
-): ModelCostResult {
+export function calculateWorkloadCost(params: WorkloadParams): CalculationResult {
   const {
-    monthlyRequests,
-    avgInputTokens,
-    avgOutputTokens,
-    cachedInputPercentage,
-    enableBatchDiscount,
+    model,
+    requestsPerMonth,
+    inputTokensPerReq,
+    outputTokensPerReq,
+    cachingPercentage,
+    batchDiscount = false,
   } = params;
 
-  const monthlyInputTokens = monthlyRequests * avgInputTokens;
-  const monthlyOutputTokens = monthlyRequests * avgOutputTokens;
+  const inputPrice = model ? (model.inputPricePerMillion ?? model.inputCostPer1M) : 2.5;
+  const outputPrice = model ? (model.outputPricePerMillion ?? model.outputCostPer1M) : 10.0;
+  const cachedPrice = model ? (model.cachedInputPricePerMillion ?? model.cachedInputCostPer1M ?? inputPrice) : inputPrice;
+
+  const monthlyInputTokens = requestsPerMonth * inputTokensPerReq;
+  const monthlyOutputTokens = requestsPerMonth * outputTokensPerReq;
   const monthlyTotalTokens = monthlyInputTokens + monthlyOutputTokens;
 
-  const cachedRatio = Math.min(Math.max(cachedInputPercentage / 100, 0), 1);
-  const cachedInputTokens = monthlyInputTokens * cachedRatio;
+  const cacheRatio = Math.min(Math.max(cachingPercentage / 100, 0), 1);
+  const cachedInputTokens = monthlyInputTokens * cacheRatio;
   const uncachedInputTokens = monthlyInputTokens - cachedInputTokens;
 
-  const cachedRate = model.cachedInputCostPer1M ?? model.inputCostPer1M;
   const rawInputCost =
-    (uncachedInputTokens / 1_000_000) * model.inputCostPer1M +
-    (cachedInputTokens / 1_000_000) * cachedRate;
+    (uncachedInputTokens / 1_000_000) * inputPrice +
+    (cachedInputTokens / 1_000_000) * cachedPrice;
 
-  const rawOutputCost = (monthlyOutputTokens / 1_000_000) * model.outputCostPer1M;
+  const rawOutputCost = (monthlyOutputTokens / 1_000_000) * outputPrice;
 
-  const isBatch = enableBatchDiscount ?? params.batchDiscount ?? false;
   const discountMultiplier =
-    isBatch && model.batchDiscountPercentage
-      ? 1 - model.batchDiscountPercentage / 100
-      : 1;
+    batchDiscount && (model?.batchDiscountPercentage ?? 50) > 0
+      ? 1 - (model?.batchDiscountPercentage ?? 50) / 100
+      : 1.0;
 
   const inputCostUSD = rawInputCost * discountMultiplier;
   const outputCostUSD = rawOutputCost * discountMultiplier;
-  const totalMonthlyCostUSD = inputCostUSD + outputCostUSD;
-  const annualCostUSD = totalMonthlyCostUSD * 12;
+  const totalMonthlyCost = inputCostUSD + outputCostUSD;
 
-  const costPer1kRequestsUSD =
-    monthlyRequests > 0 ? (totalMonthlyCostUSD / monthlyRequests) * 1000 : 0;
+  const costPer1kRequests = requestsPerMonth > 0 ? (totalMonthlyCost / requestsPerMonth) * 1000 : 0;
+  const effectivePer1MTotal = monthlyTotalTokens > 0 ? (totalMonthlyCost / monthlyTotalTokens) * 1_000_000 : 0;
 
-  const effectiveCostPer1MTokensUSD =
-    monthlyTotalTokens > 0
-      ? (totalMonthlyCostUSD / monthlyTotalTokens) * 1_000_000
-      : 0;
-
-  const savingsFromCaching =
-    model.cachedInputCostPer1M && model.cachedInputCostPer1M < model.inputCostPer1M
-      ? ((cachedInputTokens / 1_000_000) *
-          (model.inputCostPer1M - model.cachedInputCostPer1M) *
-          discountMultiplier)
-      : 0;
+  const standardNoCacheInputCost = (monthlyInputTokens / 1_000_000) * inputPrice * discountMultiplier;
+  const savingsFromCaching = Math.max(0, standardNoCacheInputCost - inputCostUSD);
 
   return {
-    model,
     monthlyInputTokens,
     monthlyOutputTokens,
     monthlyTotalTokens,
@@ -90,90 +75,62 @@ export function calculateSingleModelCost(
     uncachedInputTokens,
     inputCostUSD,
     outputCostUSD,
-    totalMonthlyCostUSD,
-    totalMonthlyCost: totalMonthlyCostUSD,
-    annualCostUSD,
-    costPer1kRequestsUSD,
-    costPer1kRequests: costPer1kRequestsUSD,
-    effectiveCostPer1MTokensUSD,
+    totalMonthlyCost,
+    totalMonthlyCostUSD: totalMonthlyCost,
+    costPer1kRequests,
+    effectivePer1MTotal,
     savingsFromCaching,
   };
 }
 
-export function calculateAllModelsCost(
-  arg1: AIModel[] | CalculationParams,
-  arg2?: CalculationParams
-): ModelCostResult[] {
-  let models: AIModel[];
-  let params: CalculationParams;
-
-  if (Array.isArray(arg1)) {
-    models = arg1;
-    params = arg2!;
-  } else {
-    models = AI_MODELS;
-    params = arg1;
-  }
-
-  const results = models.map((m) => calculateSingleModelCost(m, params));
-  // Sort ascending by total monthly cost
-  return results.sort((a, b) => a.totalMonthlyCostUSD - b.totalMonthlyCostUSD);
+export interface GpuBreakevenParams {
+  gpu: GPUInstance;
+  apiModel: AIModel;
+  utilizationRate: number; // e.g. 65 (%)
 }
 
 export interface GpuBreakevenResult {
-  gpu: GPUInstance;
-  monthlyGpuCostUSD: number; // 730 hours
-  monthlyTokensCapacity: number; // estimated maximum tokens at 60% avg utilization
-  apiCostEquivalentUSD: number; // cost if generated on model (e.g. Llama 3.3 70B API)
-  isGpuCheaper: boolean;
-  monthlySavingsUSD: number;
-  breakevenRequestsPerMonth: number;
+  monthlyGpuTcoUSD: number;
+  monthlyGpuTokensCapacity: number;
+  breakevenTokensPerMonth: number;
+  isGpuCheaperAtCapacity: boolean;
+  savingsAtFullCapacity: number;
 }
 
-export function calculateGpuBreakeven(
-  gpu: GPUInstance,
-  targetModel: AIModel,
-  params: CalculationParams,
-  utilizationRate = 0.55 // 55% average server capacity utilization
-): GpuBreakevenResult {
+export function calculateGpuBreakeven({
+  gpu,
+  apiModel,
+  utilizationRate,
+}: GpuBreakevenParams): GpuBreakevenResult {
+  const monthlyGpuTcoUSD = gpu.monthlyCostWithOverhead;
   const hoursPerMonth = 730;
-  const monthlyGpuCostUSD = gpu.hourlyRate * hoursPerMonth;
-
-  // Maximum token production capacity per month
   const secondsPerMonth = hoursPerMonth * 3600;
-  const monthlyTokensCapacity =
-    gpu.estimatedTokensPerSec * secondsPerMonth * utilizationRate;
+  const rateRatio = utilizationRate / 100;
 
-  const apiResult = calculateSingleModelCost(targetModel, params);
-  const apiCostEquivalentUSD = apiResult.totalMonthlyCostUSD;
+  const monthlyGpuTokensCapacity = gpu.estimatedTokensPerSec * secondsPerMonth * rateRatio;
 
-  const isGpuCheaper = monthlyGpuCostUSD < apiCostEquivalentUSD;
-  const monthlySavingsUSD = Math.abs(apiCostEquivalentUSD - monthlyGpuCostUSD);
+  // Blended API price per token (assuming 3:1 input:output distribution)
+  const blendedApiPricePer1M = (apiModel.inputPricePerMillion * 3 + apiModel.outputPricePerMillion) / 4;
+  const blendedPricePerToken = blendedApiPricePer1M / 1_000_000;
 
-  // Compute how many requests needed to hit breakeven
-  const costPerReqApi =
-    params.monthlyRequests > 0
-      ? apiResult.totalMonthlyCostUSD / params.monthlyRequests
-      : 0.001;
-  const breakevenRequestsPerMonth =
-    costPerReqApi > 0 ? Math.ceil(monthlyGpuCostUSD / costPerReqApi) : 0;
+  const breakevenTokensPerMonth = blendedPricePerToken > 0 ? monthlyGpuTcoUSD / blendedPricePerToken : 0;
+
+  const apiCostAtGpuCapacity = monthlyGpuTokensCapacity * blendedPricePerToken;
+  const isGpuCheaperAtCapacity = monthlyGpuTcoUSD < apiCostAtGpuCapacity;
+  const savingsAtFullCapacity = Math.max(0, apiCostAtGpuCapacity - monthlyGpuTcoUSD);
 
   return {
-    gpu,
-    monthlyGpuCostUSD,
-    monthlyTokensCapacity,
-    apiCostEquivalentUSD,
-    isGpuCheaper,
-    monthlySavingsUSD,
-    breakevenRequestsPerMonth,
+    monthlyGpuTcoUSD,
+    monthlyGpuTokensCapacity,
+    breakevenTokensPerMonth,
+    isGpuCheaperAtCapacity,
+    savingsAtFullCapacity,
   };
 }
 
-export function formatUSD(val: number, maxDecimals = 2): string {
+export function formatCurrency(val: number, maxDecimals = 2): string {
   if (val === 0) return '$0.00';
-  if (val < 0.01) {
-    return `$${val.toFixed(4)}`;
-  }
+  if (val < 0.01) return `$${val.toFixed(4)}`;
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
@@ -182,26 +139,19 @@ export function formatUSD(val: number, maxDecimals = 2): string {
   }).format(val);
 }
 
-export function formatNumber(val: number): string {
-  if (val >= 1_000_000_000) {
-    return `${(val / 1_000_000_000).toFixed(1)}B`;
+export function formatTokens(tokens: number): string {
+  if (tokens >= 1_000_000_000) {
+    return `${(tokens / 1_000_000_000).toFixed(1)}B`;
   }
-  if (val >= 1_000_000) {
-    return `${(val / 1_000_000).toFixed(1)}M`;
+  if (tokens >= 1_000_000) {
+    return `${(tokens / 1_000_000).toFixed(tokens % 1_000_000 === 0 ? 0 : 1)}M`;
   }
-  if (val >= 1_000) {
-    return `${(val / 1_000).toFixed(1)}K`;
+  if (tokens >= 1_000) {
+    return `${(tokens / 1_000).toFixed(0)}K`;
   }
-  return val.toLocaleString('en-US');
+  return tokens.toLocaleString();
 }
 
 export function formatContextWindow(tokens: number): string {
-  if (tokens >= 1_000_000) {
-    return `${(tokens / 1_000_000).toFixed(0)}M tokens`;
-  }
-  if (tokens >= 1_000) {
-    return `${(tokens / 1_000).toFixed(0)}K tokens`;
-  }
-  return `${tokens} tokens`;
+  return formatTokens(tokens);
 }
-

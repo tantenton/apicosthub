@@ -1,91 +1,87 @@
 'use client';
 
 import React, { useState } from 'react';
-import { HelpCircle, ChevronDown } from 'lucide-react';
+import { ChevronDown, HelpCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-interface FaqItem {
-  q: string;
-  a: string;
-}
-
-const FAQ_ITEMS: FaqItem[] = [
+const FAQS = [
   {
-    q: 'How accurate is the prompt caching calculation?',
-    a: 'Calculations use exact published cache read rates: Anthropic charges 10% of base input rate ($0.30 vs $3.00/1M on Sonnet 3.5), OpenAI charges 50% ($1.25 vs $2.50/1M on GPT-4o), and DeepSeek charges 10% ($0.014 vs $0.14/1M on DeepSeek V3). Cache write premiums for Anthropic (5-minute TTL) are factored into blended calculations.',
+    q: 'How does prompt caching affect my monthly invoice?',
+    a: 'Prompt caching allows providers to store the KV-cache of identical prompt prefixes (such as agent system instructions, API schemas, or codebases). Anthropic, OpenAI, and DeepSeek offer up to 90% discounts on cached input tokens, drastically reducing costs for agentic loop workflows.',
   },
   {
-    q: 'What is the standard ratio between input and output tokens?',
-    a: 'For conversational support and agentic workflows, empirical benchmarks show an average ratio of 4:1 to 5:1 (input to output). For summarization or extraction, ratios often exceed 10:1. For code generation and creative drafting, the ratio drops closer to 2:1.',
+    q: 'What is the Batch API discount and when should I use it?',
+    a: 'Both OpenAI and Anthropic offer a 50% discount on standard token prices for requests submitted via their asynchronous Batch APIs. In exchange, responses are delivered within a 24-hour SLA. This is ideal for bulk document processing, synthetic dataset creation, and offline evaluations.',
   },
   {
-    q: 'When should an engineering team switch from Managed APIs to self-hosted GPUs?',
-    a: 'Breakeven depends heavily on model size. For 70B parameter models like Llama 3.3 70B or DeepSeek R1 distilled, a dedicated H100 SXM node ($2.49/hr) breaks even at approximately 350M to 450M tokens per month at 50% sustained utilization.',
+    q: 'When does self-hosting open-weight models on GPUs make financial sense?',
+    a: 'Self-hosting becomes viable when monthly token volume reaches continuous saturation (typically > 500 million to 1 billion tokens per month). At that point, the fixed hourly lease of an 8x H100 or 8x A100 node produces a lower per-token cost than commercial API gateways, assuming >60% hardware utilization.',
   },
   {
-    q: 'Are batch processing discounts available across all models?',
-    a: 'OpenAI, Anthropic, and Google support Batch endpoints with a 50% flat discount on input and output tokens. Turnaround SLAs are 24 hours, making batch ideal for synthetic data generation, periodic classification, and testing evaluation runs.',
-  },
-  {
-    q: 'How frequently are provider prices updated on APICostHub?',
-    a: 'Price tables and model metadata are verified and updated within 24 hours of official pricing announcements from OpenAI, Anthropic, Google Cloud, DeepSeek, and Meta.',
+    q: 'How frequently are model pricing tariffs updated on APICostHub?',
+    a: 'We monitor official provider price updates (OpenAI, Anthropic, Google DeepMind, DeepSeek, Meta) weekly. Tariffs shown reflect verified production pricing for March 2026.',
   },
 ];
 
 export default function FaqSection() {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const [openIdx, setOpenIdx] = useState<number | null>(0);
 
   const toggle = (idx: number) => {
-    setOpenIndex(openIndex === idx ? null : idx);
+    setOpenIdx(openIdx === idx ? null : idx);
   };
 
   return (
-    <section id="faq" className="w-full py-12 border-t border-white/10 bg-[#08090a]">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        
-        {/* Section Header */}
-        <div className="mb-8 pb-4 border-b border-white/10">
-          <div className="flex items-center gap-2 text-xs text-indigo-400 font-semibold uppercase tracking-wider mb-1">
-            <HelpCircle className="w-4 h-4 text-indigo-400" />
+    <section className="w-full max-w-7xl px-4 sm:px-6 my-10">
+      <div className="surface-card rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-xl overflow-hidden">
+        <div className="text-center max-w-2xl mx-auto mb-8">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold mb-2">
+            <HelpCircle className="w-3.5 h-3.5 text-indigo-600" />
             <span>Frequently Asked Questions</span>
           </div>
-          <h2 className="text-xl sm:text-3xl font-bold text-white tracking-tight">
-            LLM API Economics and Infrastructure Guidance
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            LLM Tokenomics & Infrastructure FAQ
           </h2>
         </div>
 
-        {/* Interactive Accordion List */}
-        <div className="space-y-3">
-          {FAQ_ITEMS.map((item, idx) => {
-            const isOpen = openIndex === idx;
+        <div className="max-w-3xl mx-auto space-y-3">
+          {FAQS.map((faq, i) => {
+            const isOpen = openIdx === i;
             return (
               <div
-                key={item.q}
-                className="surface-card rounded-2xl border border-white/10 overflow-hidden shadow-lg transition-colors"
+                key={i}
+                className="rounded-2xl border border-slate-200 bg-white overflow-hidden transition-all shadow-2xs"
               >
                 <button
-                  onClick={() => toggle(idx)}
-                  className="w-full p-5 text-left flex items-center justify-between gap-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 min-h-[48px]"
-                  aria-expanded={isOpen}
+                  onClick={() => toggle(i)}
+                  className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors"
                 >
-                  <span className="font-semibold text-white text-sm">
-                    {item.q}
+                  <span className="text-sm font-bold text-slate-900">
+                    {faq.q}
                   </span>
                   <ChevronDown
-                    className={`w-4 h-4 text-indigo-400 transition-transform duration-200 flex-shrink-0 ${
-                      isOpen ? 'rotate-180' : ''
+                    className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
+                      isOpen ? 'rotate-180 text-indigo-600' : ''
                     }`}
                   />
                 </button>
-                {isOpen && (
-                  <div className="px-5 pb-5 text-xs text-slate-400 leading-relaxed border-t border-white/5 pt-3">
-                    {item.a}
-                  </div>
-                )}
+
+                <AnimatePresence>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="px-4 pb-5 sm:px-5 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3"
+                    >
+                      {faq.a}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             );
           })}
         </div>
-
       </div>
     </section>
   );
