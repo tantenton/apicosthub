@@ -264,7 +264,7 @@ export default function HeroCalculator() {
                     <span>{preset.name}</span>
                     {isActive && <Check className="w-3.5 h-3.5 text-indigo-400" />}
                   </div>
-                  <div className="text-xs text-slate-500 truncate mt-1">
+                  <div className="text-[11px] text-slate-400 mt-1 leading-snug">
                     {preset.desc}
                   </div>
                 </button>

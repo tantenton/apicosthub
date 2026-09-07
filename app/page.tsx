@@ -11,11 +11,6 @@ import AdPlacement from '@/components/AdPlacement';
 export default function Home() {
   return (
     <div className="w-full flex flex-col items-center">
-      {/* Discreet Developer Partner Unit */}
-      <div className="w-full max-w-7xl px-4 sm:px-6 pt-4">
-        <AdPlacement slotId="leaderboard-top" format="horizontal-leaderboard" />
-      </div>
-
       {/* Main Interactive Tokenomics Workbench */}
       <HeroCalculator />
 
@@ -24,8 +19,8 @@ export default function Home() {
         <ParetoMatrixChart />
       </div>
 
-      {/* Mid Sponsor / Ad Placement */}
-      <div className="w-full max-w-7xl px-4 sm:px-6">
+      {/* Discreet Developer Partner Unit */}
+      <div className="w-full max-w-7xl px-4 sm:px-6 my-4">
         <AdPlacement slotId="mid-feed-sponsor" format="horizontal-leaderboard" />
       </div>
 
