@@ -1,11 +1,12 @@
-import { AIModel, GPUInstance } from '@/data/models';
+import { AIModel, GPUInstance, AI_MODELS } from '@/data/models';
 
 export interface CalculationParams {
   monthlyRequests: number;
   avgInputTokens: number;
   avgOutputTokens: number;
   cachedInputPercentage: number; // 0 to 100
-  enableBatchDiscount: boolean;
+  enableBatchDiscount?: boolean;
+  batchDiscount?: boolean;
 }
 
 export interface ModelCostResult {
@@ -18,10 +19,13 @@ export interface ModelCostResult {
   inputCostUSD: number;
   outputCostUSD: number;
   totalMonthlyCostUSD: number;
+  totalMonthlyCost: number;
   annualCostUSD: number;
   costPer1kRequestsUSD: number;
+  costPer1kRequests: number;
   effectiveCostPer1MTokensUSD: number;
   savingsVsBaselineUSD?: number;
+  savingsFromCaching: number;
 }
 
 export function calculateSingleModelCost(
@@ -51,8 +55,9 @@ export function calculateSingleModelCost(
 
   const rawOutputCost = (monthlyOutputTokens / 1_000_000) * model.outputCostPer1M;
 
+  const isBatch = enableBatchDiscount ?? params.batchDiscount ?? false;
   const discountMultiplier =
-    enableBatchDiscount && model.batchDiscountPercentage
+    isBatch && model.batchDiscountPercentage
       ? 1 - model.batchDiscountPercentage / 100
       : 1;
 
@@ -69,6 +74,13 @@ export function calculateSingleModelCost(
       ? (totalMonthlyCostUSD / monthlyTotalTokens) * 1_000_000
       : 0;
 
+  const savingsFromCaching =
+    model.cachedInputCostPer1M && model.cachedInputCostPer1M < model.inputCostPer1M
+      ? ((cachedInputTokens / 1_000_000) *
+          (model.inputCostPer1M - model.cachedInputCostPer1M) *
+          discountMultiplier)
+      : 0;
+
   return {
     model,
     monthlyInputTokens,
@@ -79,16 +91,30 @@ export function calculateSingleModelCost(
     inputCostUSD,
     outputCostUSD,
     totalMonthlyCostUSD,
+    totalMonthlyCost: totalMonthlyCostUSD,
     annualCostUSD,
     costPer1kRequestsUSD,
+    costPer1kRequests: costPer1kRequestsUSD,
     effectiveCostPer1MTokensUSD,
+    savingsFromCaching,
   };
 }
 
 export function calculateAllModelsCost(
-  models: AIModel[],
-  params: CalculationParams
+  arg1: AIModel[] | CalculationParams,
+  arg2?: CalculationParams
 ): ModelCostResult[] {
+  let models: AIModel[];
+  let params: CalculationParams;
+
+  if (Array.isArray(arg1)) {
+    models = arg1;
+    params = arg2!;
+  } else {
+    models = AI_MODELS;
+    params = arg1;
+  }
+
   const results = models.map((m) => calculateSingleModelCost(m, params));
   // Sort ascending by total monthly cost
   return results.sort((a, b) => a.totalMonthlyCostUSD - b.totalMonthlyCostUSD);
@@ -168,3 +194,14 @@ export function formatNumber(val: number): string {
   }
   return val.toLocaleString('en-US');
 }
+
+export function formatContextWindow(tokens: number): string {
+  if (tokens >= 1_000_000) {
+    return `${(tokens / 1_000_000).toFixed(0)}M tokens`;
+  }
+  if (tokens >= 1_000) {
+    return `${(tokens / 1_000).toFixed(0)}K tokens`;
+  }
+  return `${tokens} tokens`;
+}
+

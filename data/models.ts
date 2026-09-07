@@ -14,6 +14,8 @@ export interface AIModel {
   knowledgeCutoff: string;
   description: string;
   recommendedFor: string[];
+  isOpenWeights?: boolean;
+  speedTokensPerSec?: number;
   benchmarks?: {
     mmlu?: number;
     code?: number;
@@ -24,9 +26,11 @@ export interface AIModel {
 export interface GPUInstance {
   id: string;
   gpuName: string;
+  name?: string;
   provider: string;
   vramGB: number;
   hourlyRate: number; // USD/hr
+  hourlyRateUSD: number;
   estimatedTokensPerSec: number; // for 70B or 8B model throughput
   optimalModelSize: string;
 }
@@ -337,38 +341,46 @@ export const GPU_INSTANCES: GPUInstance[] = [
   {
     id: 'rtx-4090',
     gpuName: 'NVIDIA RTX 4090 (24GB)',
+    name: 'NVIDIA RTX 4090 (24GB)',
     provider: 'RunPod / Vast.ai',
     vramGB: 24,
     hourlyRate: 0.44,
+    hourlyRateUSD: 0.44,
     estimatedTokensPerSec: 140, // For 8B quantized model (FP8/AWQ)
     optimalModelSize: '8B – 14B Q4/FP8'
   },
   {
     id: 'l40s',
     gpuName: 'NVIDIA L40S (48GB)',
+    name: 'NVIDIA L40S (48GB)',
     provider: 'RunPod / Lambda Labs',
     vramGB: 48,
     hourlyRate: 0.85,
+    hourlyRateUSD: 0.85,
     estimatedTokensPerSec: 95,
     optimalModelSize: '32B – 70B Quantized'
   },
   {
     id: 'a100-80gb',
     gpuName: 'NVIDIA A100 SXM4 (80GB)',
+    name: 'NVIDIA A100 SXM4 (80GB)',
     provider: 'Lambda / GCP / RunPod',
     vramGB: 80,
     hourlyRate: 1.49,
+    hourlyRateUSD: 1.49,
     estimatedTokensPerSec: 75,
     optimalModelSize: '70B FP8 or vLLM Batch'
   },
   {
     id: 'h100-sxm5',
     gpuName: 'NVIDIA H100 SXM5 (80GB)',
+    name: 'NVIDIA H100 SXM5 (80GB)',
     provider: 'RunPod / Lambda / CoreWeave',
     vramGB: 80,
     hourlyRate: 2.89,
+    hourlyRateUSD: 2.89,
     estimatedTokensPerSec: 190,
-    optimalModelSize: '70B – 405B MoE Full Speed'
+    optimalModelSize: '70B – 405B MoE vLLM'
   }
 ];
 

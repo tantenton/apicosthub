@@ -2,121 +2,81 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Calculator, Cpu, GitCompare, Table, Menu, X, Sparkles, ShieldCheck } from 'lucide-react';
+import { Terminal, Cpu, GitCompare, Table2, Layers, Github, ExternalLink } from 'lucide-react';
 
 export default function Navbar() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-surface border border-border group-hover:border-brand transition-colors">
-            <span className="font-mono text-base font-bold text-brand">&gt;_</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-base font-bold tracking-tight text-text-primary group-hover:text-white transition-colors">
-              APICostHub<span className="text-brand">.com</span>
-            </span>
-            <span className="text-[10px] font-mono tracking-wider uppercase text-text-muted">
-              AI Token & Cloud Unit Economics
-            </span>
-          </div>
-        </Link>
+    <header className="sticky top-0 z-50 w-full border-b border-[#1E2638] bg-[#080A0F]/90 backdrop-blur-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+        
+        {/* Brand Identity - Terminal Style */}
+        <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="w-7 h-7 rounded bg-[#10B981]/10 border border-[#10B981]/30 flex items-center justify-center text-[#10B981] group-hover:border-[#10B981] transition-colors">
+              <Terminal className="w-4 h-4" />
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-semibold text-white tracking-tight text-sm sm:text-base font-mono">
+                API<span className="text-[#10B981]">Cost</span>Hub
+              </span>
+              <span className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono rounded bg-[#171E2E] text-[#94A3B8] border border-[#232D42]">
+                v2026.3
+              </span>
+            </div>
+          </Link>
+        </div>
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        {/* Center Navigation - Developer Tabs */}
+        <nav className="hidden md:flex items-center gap-1 text-xs font-medium text-[#94A3B8]">
           <Link
             href="/"
-            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface transition-colors"
+            className="px-3 py-1.5 rounded-md hover:text-white hover:bg-[#141A26] transition-colors flex items-center gap-1.5 text-white bg-[#141A26]/80 border border-[#232D42]"
           >
-            <Calculator className="h-4 w-4 text-brand" />
-            <span>Calculator</span>
+            <Layers className="w-3.5 h-3.5 text-[#10B981]" />
+            Workbench
           </Link>
           <Link
-            href="/compare/gpt-4o-vs-claude-3-5-sonnet"
-            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface transition-colors"
+            href="/#head-to-head"
+            className="px-3 py-1.5 rounded-md hover:text-white hover:bg-[#141A26] transition-colors flex items-center gap-1.5"
           >
-            <GitCompare className="h-4 w-4 text-accent-emerald" />
-            <span>Head-to-Head</span>
+            <GitCompare className="w-3.5 h-3.5 text-blue-400" />
+            Diff & Compare
           </Link>
           <Link
             href="/calculator/gpu-vs-api"
-            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface transition-colors"
+            className="px-3 py-1.5 rounded-md hover:text-white hover:bg-[#141A26] transition-colors flex items-center gap-1.5"
           >
-            <Cpu className="h-4 w-4 text-accent-amber" />
-            <span>GPU vs API</span>
+            <Cpu className="w-3.5 h-3.5 text-amber-400" />
+            Self-Hosted vs API
           </Link>
           <Link
             href="/pricing-table"
-            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface transition-colors"
+            className="px-3 py-1.5 rounded-md hover:text-white hover:bg-[#141A26] transition-colors flex items-center gap-1.5"
           >
-            <Table className="h-4 w-4 text-text-secondary" />
-            <span>2026 Model Index</span>
+            <Table2 className="w-3.5 h-3.5 text-purple-400" />
+            Master Matrix
           </Link>
         </nav>
 
-        {/* Badge & CTA */}
-        <div className="hidden lg:flex items-center gap-3">
-          <div className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-xs text-text-secondary">
-            <span className="h-2 w-2 rounded-full bg-accent-emerald animate-pulse" />
-            <span className="font-mono">Updated Sep 2026</span>
+        {/* Right Actions & Status */}
+        <div className="flex items-center gap-2.5">
+          {/* Real-time Status Indicator */}
+          <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded border border-[#1E2638] bg-[#0E121B] text-[11px] font-mono text-[#94A3B8]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
+            <span>16 Models Indexed</span>
           </div>
-          <Link
-            href="/pricing-table"
-            className="rounded-lg bg-brand px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-hover transition-colors"
-          >
-            Compare 16 Models
-          </Link>
-        </div>
 
-        {/* Mobile Toggle */}
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface text-text-secondary hover:text-text-primary"
-          aria-label="Toggle Navigation"
-        >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+          <a
+            href="https://github.com/tantenton/apicosthub"
+            target="_blank"
+            rel="noreferrer"
+            className="p-1.5 rounded border border-[#1E2638] bg-[#0E121B] hover:bg-[#171E2E] text-[#94A3B8] hover:text-white transition-colors"
+            title="View Source on GitHub"
+          >
+            <Github className="w-4 h-4" />
+          </a>
+        </div>
       </div>
-
-      {/* Mobile Menu */}
-      {mobileOpen && (
-        <div className="md:hidden border-b border-border bg-surface px-4 py-4 space-y-2">
-          <Link
-            href="/"
-            onClick={() => setMobileOpen(false)}
-            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-primary hover:bg-surface-hover"
-          >
-            <Calculator className="h-4 w-4 text-brand" />
-            <span>Cost Calculator</span>
-          </Link>
-          <Link
-            href="/compare/gpt-4o-vs-claude-3-5-sonnet"
-            onClick={() => setMobileOpen(false)}
-            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-primary hover:bg-surface-hover"
-          >
-            <GitCompare className="h-4 w-4 text-accent-emerald" />
-            <span>Model Comparisons</span>
-          </Link>
-          <Link
-            href="/calculator/gpu-vs-api"
-            onClick={() => setMobileOpen(false)}
-            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-primary hover:bg-surface-hover"
-          >
-            <Cpu className="h-4 w-4 text-accent-amber" />
-            <span>GPU Breakeven Calculator</span>
-          </Link>
-          <Link
-            href="/pricing-table"
-            onClick={() => setMobileOpen(false)}
-            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-primary hover:bg-surface-hover"
-          >
-            <Table className="h-4 w-4 text-text-secondary" />
-            <span>All Model Pricing</span>
-          </Link>
-        </div>
-      )}
     </header>
   );
 }

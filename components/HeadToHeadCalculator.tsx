@@ -7,17 +7,9 @@ import {
   calculateSingleModelCost,
   CalculationParams,
   formatUSD,
-  formatNumber,
+  formatContextWindow,
 } from '@/lib/calculator';
-import {
-  GitCompare,
-  TrendingDown,
-  Sparkles,
-  ArrowRight,
-  ShieldAlert,
-  CheckCircle,
-  Percent,
-} from 'lucide-react';
+import { GitCompare, ArrowRight, CheckCircle2, XCircle, Zap, Shield, Sparkles } from 'lucide-react';
 
 interface HeadToHeadCalculatorProps {
   initialModelA?: string;
@@ -31,11 +23,11 @@ export default function HeadToHeadCalculator({
   const [modelAId, setModelAId] = useState<string>(initialModelA);
   const [modelBId, setModelBId] = useState<string>(initialModelB);
 
-  // Workload parameters
-  const [monthlyRequests, setMonthlyRequests] = useState<number>(250000);
-  const [avgInputTokens, setAvgInputTokens] = useState<number>(1500);
-  const [avgOutputTokens, setAvgOutputTokens] = useState<number>(500);
-  const [cachedPercentage, setCachedPercentage] = useState<number>(40);
+  // Volume parameters
+  const [requests, setRequests] = useState<number>(500_000);
+  const [inputTokens, setInputTokens] = useState<number>(2_000);
+  const [outputTokens, setOutputTokens] = useState<number>(500);
+  const [cachingRate, setCachingRate] = useState<number>(50);
 
   const modelA = useMemo(
     () => AI_MODELS.find((m) => m.id === modelAId) || AI_MODELS[0],
@@ -48,193 +40,222 @@ export default function HeadToHeadCalculator({
 
   const params: CalculationParams = useMemo(
     () => ({
-      monthlyRequests,
-      avgInputTokens,
-      avgOutputTokens,
-      cachedInputPercentage: cachedPercentage,
-      enableBatchDiscount: false,
+      monthlyRequests: requests,
+      avgInputTokens: inputTokens,
+      avgOutputTokens: outputTokens,
+      cachedInputPercentage: cachingRate,
+      batchDiscount: false,
     }),
-    [monthlyRequests, avgInputTokens, avgOutputTokens, cachedPercentage]
+    [requests, inputTokens, outputTokens, cachingRate]
   );
 
   const costA = useMemo(() => calculateSingleModelCost(modelA, params), [modelA, params]);
   const costB = useMemo(() => calculateSingleModelCost(modelB, params), [modelB, params]);
 
-  const diffUSD = Math.abs(costA.totalMonthlyCostUSD - costB.totalMonthlyCostUSD);
-  const cheaperModel =
-    costA.totalMonthlyCostUSD < costB.totalMonthlyCostUSD ? modelA : modelB;
-  const pricierModel =
-    costA.totalMonthlyCostUSD < costB.totalMonthlyCostUSD ? modelB : modelA;
-  const percentSaved =
-    pricierModel.inputCostPer1M > 0
-      ? ((diffUSD / (pricierModel === modelA ? costA.totalMonthlyCostUSD : costB.totalMonthlyCostUSD)) * 100).toFixed(1)
-      : '0';
+  const diffCost = Math.abs(costA.totalMonthlyCost - costB.totalMonthlyCost);
+  const cheaperModel = costA.totalMonthlyCost < costB.totalMonthlyCost ? modelA : modelB;
+  const expensiveModel = costA.totalMonthlyCost < costB.totalMonthlyCost ? modelB : modelA;
+  const ratio =
+    expensiveModel && cheaperModel && costA.totalMonthlyCost > 0 && costB.totalMonthlyCost > 0
+      ? (
+          Math.max(costA.totalMonthlyCost, costB.totalMonthlyCost) /
+          Math.min(costA.totalMonthlyCost, costB.totalMonthlyCost)
+        ).toFixed(1)
+      : '1.0';
 
   return (
-    <div className="w-full rounded-2xl border border-border bg-surface p-6 sm:p-8 shadow-xl">
-      <div className="flex items-center gap-3 pb-6 border-b border-border">
-        <GitCompare className="h-6 w-6 text-brand" />
-        <div>
-          <h2 className="text-xl font-bold text-text-primary">
-            Head-to-Head Token Economics & Savings
-          </h2>
-          <p className="text-xs text-text-secondary">
-            Select two models to compare monthly run-rate, latency tier, and caching yield.
-          </p>
-        </div>
-      </div>
+    <section id="head-to-head" className="w-full py-10 border-t border-[#1E2638] bg-[#0A0D14]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        
+        {/* Section Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-[#1E2638]">
+          <div>
+            <div className="flex items-center gap-2 font-mono text-xs text-blue-400 font-semibold uppercase tracking-wider">
+              <GitCompare className="w-4 h-4" />
+              Head-to-Head Model Diff
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold font-mono text-white mt-1">
+              Side-by-Side Cost & Benchmark Delta
+            </h2>
+          </div>
 
-      {/* Model Selectors Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
-        {/* Model A Box */}
-        <div className="rounded-xl border border-border bg-surface-subtle p-5">
-          <label className="text-xs font-mono uppercase tracking-wider text-text-muted mb-2 block">
-            Baseline Model (A)
-          </label>
-          <select
-            value={modelAId}
-            onChange={(e) => setModelAId(e.target.value)}
-            className="w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm font-semibold text-text-primary focus:border-brand focus:outline-none"
-          >
-            {AI_MODELS.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name} ({m.provider})
-              </option>
+          {/* Quick Switch Pairs */}
+          <div className="flex items-center gap-2 overflow-x-auto text-[11px] font-mono">
+            <span className="text-[#64748B]">Popular:</span>
+            {[
+              { a: 'gpt-4o', b: 'claude-3-5-sonnet', label: 'GPT-4o vs Claude 3.5' },
+              { a: 'deepseek-v3', b: 'gpt-4o', label: 'DeepSeek V3 vs GPT-4o' },
+              { a: 'deepseek-r1', b: 'o1', label: 'DeepSeek R1 vs o1' },
+            ].map((pair) => (
+              <button
+                key={pair.label}
+                onClick={() => {
+                  setModelAId(pair.a);
+                  setModelBId(pair.b);
+                }}
+                className="px-2.5 py-1 rounded bg-[#141A26] hover:bg-[#1E2638] text-[#94A3B8] hover:text-white border border-[#232D42] transition-colors whitespace-nowrap"
+              >
+                {pair.label}
+              </button>
             ))}
-          </select>
-          <div className="mt-4 space-y-2 text-xs">
-            <div className="flex justify-between text-text-secondary">
-              <span>Input Cost (per 1M):</span>
-              <span className="font-mono text-text-primary">${modelA.inputCostPer1M}</span>
+          </div>
+        </div>
+
+        {/* Delta Callout Banner */}
+        <div className="mb-6 p-4 rounded-xl bg-[#141A26] border border-[#232D42] flex flex-col md:flex-row md:items-center justify-between gap-4 font-mono">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <Zap className="w-5 h-5" />
             </div>
-            <div className="flex justify-between text-text-secondary">
-              <span>Output Cost (per 1M):</span>
-              <span className="font-mono text-text-primary">${modelA.outputCostPer1M}</span>
+            <div>
+              <div className="text-sm font-bold text-white">
+                <span className="text-emerald-400">{cheaperModel.name}</span> saves{' '}
+                <span className="text-emerald-400">{formatUSD(diffCost)}/month</span> ({ratio}x cheaper)
+              </div>
+              <div className="text-xs text-[#94A3B8] mt-0.5">
+                Simulated on {formatUSD(requests).replace('$', '')} requests/mo with {cachingRate}% prompt caching.
+              </div>
             </div>
-            <div className="flex justify-between text-text-secondary">
-              <span>Cached Input Rate:</span>
-              <span className="font-mono text-accent-emerald">${modelA.cachedInputCostPer1M || modelA.inputCostPer1M}</span>
-            </div>
-            <div className="flex justify-between text-text-secondary">
-              <span>Context Window:</span>
-              <span className="font-mono text-text-primary">{formatNumber(modelA.contextWindow)}</span>
+          </div>
+
+          <div className="flex items-center gap-4 text-xs">
+            <div className="text-right">
+              <div className="text-[#64748B]">Annual Difference</div>
+              <div className="text-emerald-400 font-bold">{formatUSD(diffCost * 12)}</div>
             </div>
           </div>
         </div>
 
-        {/* Model B Box */}
-        <div className="rounded-xl border border-border bg-surface-subtle p-5">
-          <label className="text-xs font-mono uppercase tracking-wider text-text-muted mb-2 block">
-            Alternative Model (B)
-          </label>
-          <select
-            value={modelBId}
-            onChange={(e) => setModelBId(e.target.value)}
-            className="w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm font-semibold text-text-primary focus:border-brand focus:outline-none"
-          >
-            {AI_MODELS.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name} ({m.provider})
-              </option>
-            ))}
-          </select>
-          <div className="mt-4 space-y-2 text-xs">
-            <div className="flex justify-between text-text-secondary">
-              <span>Input Cost (per 1M):</span>
-              <span className="font-mono text-text-primary">${modelB.inputCostPer1M}</span>
+        {/* Two-Column Comparison Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          {/* Model A Card */}
+          <div className="terminal-card rounded-xl p-5 border border-[#1E2638]">
+            <div className="mb-4">
+              <label className="text-[10px] uppercase font-mono tracking-wider text-[#64748B] block mb-1">
+                Select Model A
+              </label>
+              <select
+                value={modelAId}
+                onChange={(e) => setModelAId(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg bg-[#141A26] border border-[#232D42] font-mono text-sm text-white focus:outline-none focus:border-[#10B981]"
+              >
+                {AI_MODELS.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name} ({m.provider})
+                  </option>
+                ))}
+              </select>
             </div>
-            <div className="flex justify-between text-text-secondary">
-              <span>Output Cost (per 1M):</span>
-              <span className="font-mono text-text-primary">${modelB.outputCostPer1M}</span>
-            </div>
-            <div className="flex justify-between text-text-secondary">
-              <span>Cached Input Rate:</span>
-              <span className="font-mono text-accent-emerald">${modelB.cachedInputCostPer1M || modelB.inputCostPer1M}</span>
-            </div>
-            <div className="flex justify-between text-text-secondary">
-              <span>Context Window:</span>
-              <span className="font-mono text-text-primary">{formatNumber(modelB.contextWindow)}</span>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Comparison Delta Banner */}
-      <div className="rounded-xl border border-accent-emerald/40 bg-accent-emeraldSubtle/30 p-5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-emerald/20 text-accent-emerald">
-            <TrendingDown className="h-5 w-5" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-text-primary">
-              {cheaperModel.name} saves {formatUSD(diffUSD)} / month ({percentSaved}%)
-            </h3>
-            <p className="text-xs text-text-secondary">
-              Annual projected savings: <span className="font-mono font-bold text-accent-emerald">{formatUSD(diffUSD * 12)}</span>
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 text-right">
-          <div>
-            <span className="text-xs text-text-muted block">Model A Spend</span>
-            <span className="font-mono font-bold text-text-primary">{formatUSD(costA.totalMonthlyCostUSD)}</span>
-          </div>
-          <span className="text-text-muted font-bold">vs</span>
-          <div>
-            <span className="text-xs text-text-muted block">Model B Spend</span>
-            <span className="font-mono font-bold text-text-primary">{formatUSD(costB.totalMonthlyCostUSD)}</span>
-          </div>
-        </div>
-      </div>
+            {/* Model A Price Summary */}
+            <div className="p-4 rounded-lg bg-[#080A0F] border border-[#1E2638] mb-4">
+              <div className="text-[11px] font-mono text-[#64748B]">Projected Monthly Spend</div>
+              <div className="text-2xl font-bold font-mono text-white mt-1">
+                {formatUSD(costA.totalMonthlyCost)}
+              </div>
+              <div className="text-xs font-mono text-[#94A3B8] mt-0.5">
+                {formatUSD(costA.costPer1kRequests)} per 1K calls
+              </div>
+            </div>
 
-      {/* Sliders for H2H */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-4 border-t border-border">
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs font-medium text-text-secondary">
-            <span>Requests / Mo:</span>
-            <span className="font-mono text-brand">{formatNumber(monthlyRequests)}</span>
+            {/* Specs Table */}
+            <div className="space-y-2 text-xs font-mono">
+              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
+                <span className="text-[#64748B]">Provider</span>
+                <span className="text-white font-medium">{modelA.provider}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
+                <span className="text-[#64748B]">Context Window</span>
+                <span className="text-white font-medium">{formatContextWindow(modelA.contextWindow)}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
+                <span className="text-[#64748B]">Input Pricing</span>
+                <span className="text-white font-medium">${modelA.inputCostPer1M.toFixed(2)} / 1M</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
+                <span className="text-[#64748B]">Cached Input Rate</span>
+                <span className="text-emerald-400 font-medium">
+                  {(modelA.cachedInputCostPer1M ?? 0) > 0
+                    ? `$${modelA.cachedInputCostPer1M!.toFixed(2)} / 1M`
+                    : 'N/A'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
+                <span className="text-[#64748B]">Output Pricing</span>
+                <span className="text-white font-medium">${modelA.outputCostPer1M.toFixed(2)} / 1M</span>
+              </div>
+              <div className="flex justify-between py-1.5">
+                <span className="text-[#64748B]">Latency / Speed</span>
+                <span className="text-white font-medium">{modelA.speedTokensPerSec || 80} tok/sec</span>
+              </div>
+            </div>
           </div>
-          <input
-            type="range"
-            min="10000"
-            max="2000000"
-            step="10000"
-            value={monthlyRequests}
-            onChange={(e) => setMonthlyRequests(Number(e.target.value))}
-            className="w-full accent-brand h-1.5 bg-border rounded-lg appearance-none cursor-pointer"
-          />
-        </div>
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs font-medium text-text-secondary">
-            <span>Input Tokens / Req:</span>
-            <span className="font-mono text-text-primary">{avgInputTokens.toLocaleString()}</span>
+
+          {/* Model B Card */}
+          <div className="terminal-card rounded-xl p-5 border border-[#1E2638]">
+            <div className="mb-4">
+              <label className="text-[10px] uppercase font-mono tracking-wider text-[#64748B] block mb-1">
+                Select Model B
+              </label>
+              <select
+                value={modelBId}
+                onChange={(e) => setModelBId(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg bg-[#141A26] border border-[#232D42] font-mono text-sm text-white focus:outline-none focus:border-[#10B981]"
+              >
+                {AI_MODELS.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name} ({m.provider})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Model B Price Summary */}
+            <div className="p-4 rounded-lg bg-[#080A0F] border border-[#1E2638] mb-4">
+              <div className="text-[11px] font-mono text-[#64748B]">Projected Monthly Spend</div>
+              <div className="text-2xl font-bold font-mono text-white mt-1">
+                {formatUSD(costB.totalMonthlyCost)}
+              </div>
+              <div className="text-xs font-mono text-[#94A3B8] mt-0.5">
+                {formatUSD(costB.costPer1kRequests)} per 1K calls
+              </div>
+            </div>
+
+            {/* Specs Table */}
+            <div className="space-y-2 text-xs font-mono">
+              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
+                <span className="text-[#64748B]">Provider</span>
+                <span className="text-white font-medium">{modelB.provider}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
+                <span className="text-[#64748B]">Context Window</span>
+                <span className="text-white font-medium">{formatContextWindow(modelB.contextWindow)}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
+                <span className="text-[#64748B]">Input Pricing</span>
+                <span className="text-white font-medium">${modelB.inputCostPer1M.toFixed(2)} / 1M</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
+                <span className="text-[#64748B]">Cached Input Rate</span>
+                <span className="text-emerald-400 font-medium">
+                  {(modelB.cachedInputCostPer1M ?? 0) > 0
+                    ? `$${modelB.cachedInputCostPer1M!.toFixed(2)} / 1M`
+                    : 'N/A'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
+                <span className="text-[#64748B]">Output Pricing</span>
+                <span className="text-white font-medium">${modelB.outputCostPer1M.toFixed(2)} / 1M</span>
+              </div>
+              <div className="flex justify-between py-1.5">
+                <span className="text-[#64748B]">Latency / Speed</span>
+                <span className="text-white font-medium">{modelB.speedTokensPerSec || 80} tok/sec</span>
+              </div>
+            </div>
           </div>
-          <input
-            type="range"
-            min="200"
-            max="16000"
-            step="100"
-            value={avgInputTokens}
-            onChange={(e) => setAvgInputTokens(Number(e.target.value))}
-            className="w-full accent-brand h-1.5 bg-border rounded-lg appearance-none cursor-pointer"
-          />
-        </div>
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs font-medium text-text-secondary">
-            <span>Cache Hit Rate:</span>
-            <span className="font-mono text-accent-emerald">{cachedPercentage}%</span>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="90"
-            step="5"
-            value={cachedPercentage}
-            onChange={(e) => setCachedPercentage(Number(e.target.value))}
-            className="w-full accent-accent-emerald h-1.5 bg-border rounded-lg appearance-none cursor-pointer"
-          />
         </div>
       </div>
-    </div>
+    </section>
   );
 }

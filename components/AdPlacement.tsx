@@ -13,43 +13,43 @@ export default function AdPlacement({
   format = 'horizontal-leaderboard',
   className = '',
 }: AdPlacementProps) {
-  // Format configurations with reserved height to maintain 100/100 Core Web Vitals (Zero CLS)
-  const formatStyles = {
-    'horizontal-leaderboard': 'w-full min-h-[90px] md:min-h-[100px] max-w-5xl mx-auto',
-    'rectangle-medium': 'w-full min-h-[250px] md:min-h-[280px] max-w-[336px] mx-auto',
-    'skyscraper-sidebar': 'w-full min-h-[600px] max-w-[300px] mx-auto',
-    'in-feed-responsive': 'w-full min-h-[120px] max-w-4xl mx-auto',
-  };
+  // Height reservation to guarantee 0 Cumulative Layout Shift (CLS)
+  const minHeightClass =
+    format === 'horizontal-leaderboard'
+      ? 'min-h-[90px]'
+      : format === 'rectangle-medium'
+      ? 'min-h-[250px]'
+      : 'min-h-[120px]';
 
   return (
-    <div className={`my-8 flex flex-col items-center justify-center ${className}`}>
-      {/* Policy-compliant micro-label */}
-      <span className="mb-1.5 font-mono text-[9px] uppercase tracking-widest text-text-muted">
-        Advertisement
-      </span>
+    <div className={`w-full my-6 flex flex-col items-center justify-center ${className}`}>
+      {/* Policy Compliant Label */}
+      <div className="w-full max-w-4xl flex items-center justify-between pb-1.5 px-1 text-[10px] uppercase font-mono tracking-wider text-[#64748B]">
+        <span>Sponsored · Partner Network</span>
+        <span>Ad Placement</span>
+      </div>
 
+      {/* Reserved container */}
       <div
-        className={`relative flex items-center justify-center overflow-hidden rounded-lg border border-border/70 bg-surface/50 p-2 text-center transition-all ${formatStyles[format]}`}
+        className={`w-full max-w-4xl ${minHeightClass} rounded border border-[#1E2638] bg-[#0A0D14] flex items-center justify-center p-4 transition-all hover:border-[#2A364F]`}
       >
-        {/* Placeholder for production AdSense tag script */}
-        <div className="flex flex-col items-center justify-center gap-1 text-text-muted">
-          <span className="font-mono text-xs font-medium text-text-secondary">
-            Sponsored Developer Cloud & API Tools
-          </span>
-          <span className="text-[10px] text-text-muted">
-            High-Performance AI Inference, Vector DBs & Hosting
-          </span>
-        </div>
-
-        {/* AdSense ins container (Activated when real client ID is injected) */}
         <ins
-          className="adsbygoogle"
+          className="adsbygoogle block w-full text-center"
           style={{ display: 'block' }}
           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
           data-ad-slot={slotId}
           data-ad-format="auto"
           data-full-width-responsive="true"
         />
+
+        {/* Developer placeholder state (seamlessly integrated) */}
+        <div className="flex flex-col sm:flex-row items-center justify-between w-full px-4 text-xs text-[#64748B] gap-2">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#1E2638]" />
+            <span className="font-mono text-[#94A3B8]">Compute & Inference Infrastructure Sponsors</span>
+          </div>
+          <span className="text-[11px] font-mono text-[#475569]">AdSense verified container slot</span>
+        </div>
       </div>
     </div>
   );

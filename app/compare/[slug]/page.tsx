@@ -5,10 +5,10 @@ import { POPULAR_COMPARISONS, AI_MODELS, PopularComparisonPair } from '@/data/mo
 import HeadToHeadCalculator from '@/components/HeadToHeadCalculator';
 import AdPlacement from '@/components/AdPlacement';
 import Link from 'next/link';
-import { GitCompare, CheckCircle, ArrowLeft, ArrowRight, ShieldCheck, Cpu } from 'lucide-react';
-import { formatNumber } from '@/lib/calculator';
+import { ArrowLeft, GitCompare, Zap, Shield, Sparkles, Terminal } from 'lucide-react';
+import { formatContextWindow } from '@/lib/calculator';
 
-interface Props {
+interface ComparePageProps {
   params: {
     slug: string;
   };
@@ -20,7 +20,7 @@ export async function generateStaticParams() {
   }));
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: ComparePageProps): Promise<Metadata> {
   const comparison = POPULAR_COMPARISONS.find((c) => c.slug === params.slug);
   if (!comparison) {
     return {
@@ -28,62 +28,60 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const modelA = AI_MODELS.find((m) => m.id === comparison.modelAId);
-  const modelB = AI_MODELS.find((m) => m.id === comparison.modelBId);
-
   return {
-    title: `${comparison.title} (2026 Calculator) — APICostHub`,
-    description: `Detailed cost comparison between ${modelA?.name} and ${modelB?.name}. Calculate token pricing, prompt caching yields, and annual savings for custom request volumes.`,
+    title: `${comparison.title} — Real-Time API Cost Calculator 2026`,
+    description: comparison.subtitle,
     openGraph: {
       title: `${comparison.title} | APICostHub`,
       description: comparison.subtitle,
+      url: `https://apicosthub.vercel.app/compare/${params.slug}`,
     },
   };
 }
 
-export default function ComparisonPage({ params }: Props) {
+export default function ComparePage({ params }: ComparePageProps) {
   const comparison = POPULAR_COMPARISONS.find((c) => c.slug === params.slug);
   if (!comparison) {
     notFound();
   }
 
-  const modelA = AI_MODELS.find((m) => m.id === comparison.modelAId) || AI_MODELS[0];
-  const modelB = AI_MODELS.find((m) => m.id === comparison.modelBId) || AI_MODELS[4];
+  const modelA = AI_MODELS.find((m) => m.id === comparison.modelAId);
+  const modelB = AI_MODELS.find((m) => m.id === comparison.modelBId);
+
+  if (!modelA || !modelB) {
+    notFound();
+  }
 
   return (
-    <div className="w-full py-8 md:py-12">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className="w-full min-h-screen bg-[#080A0F] text-[#E2E8F0] font-mono">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         
-        {/* Breadcrumb navigation */}
-        <div className="flex items-center gap-2 text-xs text-text-muted mb-6">
-          <Link href="/" className="hover:text-text-primary flex items-center gap-1">
-            <ArrowLeft className="h-3 w-3" />
-            <span>Home</span>
-          </Link>
-          <span>/</span>
-          <span className="text-text-secondary">Comparisons</span>
-          <span>/</span>
-          <span className="text-brand font-mono">{params.slug}</span>
-        </div>
+        {/* Back Link */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-xs text-[#94A3B8] hover:text-white transition-colors mb-6"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Tokenomics Workbench
+        </Link>
 
-        {/* Hero Section for Page */}
-        <div className="max-w-4xl mb-8">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs font-mono text-brand mb-3">
-            <GitCompare className="h-3.5 w-3.5" />
-            <span>Head-to-Head Token Benchmark</span>
+        {/* Top Header */}
+        <div className="mb-8 pb-6 border-b border-[#1E2638]">
+          <div className="flex items-center gap-2 text-xs text-[#10B981] font-semibold uppercase tracking-wider mb-2">
+            <Terminal className="w-4 h-4" />
+            Direct Model Diff & Benchmark Analysis
           </div>
-          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-text-primary">
+          <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">
             {comparison.title}
           </h1>
-          <p className="mt-3 text-base text-text-secondary leading-relaxed">
+          <p className="text-sm text-[#94A3B8] mt-2 max-w-3xl leading-relaxed">
             {comparison.subtitle}
           </p>
         </div>
 
-        {/* Top Ad Unit */}
+        {/* Top Sponsor Unit */}
         <AdPlacement slotId="compare-top-ad" format="horizontal-leaderboard" />
 
-        {/* The Live Interactive Calculator preloaded with this pair */}
+        {/* Interactive Comparison Simulator */}
         <div className="my-8">
           <HeadToHeadCalculator
             initialModelA={comparison.modelAId}
@@ -91,90 +89,91 @@ export default function ComparisonPage({ params }: Props) {
           />
         </div>
 
-        {/* Deep Dive Comparison Matrix */}
-        <div className="my-12 rounded-2xl border border-border bg-surface p-6 sm:p-8">
-          <h2 className="text-xl font-bold text-text-primary mb-6">
-            Detailed Specification & Benchmark Matrix
-          </h2>
+        {/* Deep Analysis & Recommendation */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-10">
+          
+          <div className="terminal-card rounded-xl p-5 border border-[#1E2638] md:col-span-2 space-y-4">
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <Zap className="w-4 h-4 text-emerald-400" />
+              Engineering Verdict & Architecture Guidance
+            </h2>
+            <div className="text-xs text-[#CBD5E1] space-y-3 leading-relaxed">
+              <p>
+                When building production workloads, choosing between <strong>{modelA.name}</strong> and{' '}
+                <strong>{modelB.name}</strong> depends heavily on your token volume distribution and latency budgets.
+              </p>
+              <div className="bg-[#0E121B] p-4 rounded-lg border border-[#1E2638] space-y-2">
+                <div className="font-bold text-white text-xs">Cost Factor Summary:</div>
+                <ul className="list-disc list-inside space-y-1 text-[#94A3B8]">
+                  <li>
+                    <strong>Input Tokens:</strong> {modelA.name} costs ${modelA.inputCostPer1M}/1M vs{' '}
+                    {modelB.name} at ${modelB.inputCostPer1M}/1M.
+                  </li>
+                  <li>
+                    <strong>Output Tokens:</strong> {modelA.name} costs ${modelA.outputCostPer1M}/1M vs{' '}
+                    {modelB.name} at ${modelB.outputCostPer1M}/1M.
+                  </li>
+                  <li>
+                    <strong>Prompt Caching:</strong>{' '}
+                    {(modelA.cachedInputCostPer1M ?? 0) > 0
+                      ? `${modelA.name} supports caching at $${modelA.cachedInputCostPer1M}/1M.`
+                      : `${modelA.name} does not offer native prompt caching.`}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-border bg-surface-subtle font-mono text-xs uppercase text-text-muted">
-                  <th className="py-3 px-4">Metric</th>
-                  <th className="py-3 px-4">{modelA.name}</th>
-                  <th className="py-3 px-4">{modelB.name}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border text-sm">
-                <tr>
-                  <td className="py-3.5 px-4 font-medium text-text-secondary">Provider</td>
-                  <td className="py-3.5 px-4 font-semibold text-text-primary">{modelA.provider}</td>
-                  <td className="py-3.5 px-4 font-semibold text-text-primary">{modelB.provider}</td>
-                </tr>
-                <tr>
-                  <td className="py-3.5 px-4 font-medium text-text-secondary">Input Price (1M tokens)</td>
-                  <td className="py-3.5 px-4 font-mono text-brand">${modelA.inputCostPer1M}</td>
-                  <td className="py-3.5 px-4 font-mono text-brand">${modelB.inputCostPer1M}</td>
-                </tr>
-                <tr>
-                  <td className="py-3.5 px-4 font-medium text-text-secondary">Output Price (1M tokens)</td>
-                  <td className="py-3.5 px-4 font-mono text-text-primary">${modelA.outputCostPer1M}</td>
-                  <td className="py-3.5 px-4 font-mono text-text-primary">${modelB.outputCostPer1M}</td>
-                </tr>
-                <tr>
-                  <td className="py-3.5 px-4 font-medium text-text-secondary">Prompt Caching Discount</td>
-                  <td className="py-3.5 px-4 font-mono text-accent-emerald">
-                    ${modelA.cachedInputCostPer1M ? `${modelA.cachedInputCostPer1M} (cached)` : 'N/A'}
-                  </td>
-                  <td className="py-3.5 px-4 font-mono text-accent-emerald">
-                    ${modelB.cachedInputCostPer1M ? `${modelB.cachedInputCostPer1M} (cached)` : 'N/A'}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-3.5 px-4 font-medium text-text-secondary">Context Window</td>
-                  <td className="py-3.5 px-4 font-mono">{formatNumber(modelA.contextWindow)} tokens</td>
-                  <td className="py-3.5 px-4 font-mono">{formatNumber(modelB.contextWindow)} tokens</td>
-                </tr>
-                <tr>
-                  <td className="py-3.5 px-4 font-medium text-text-secondary">Latency Speed Tier</td>
-                  <td className="py-3.5 px-4">{modelA.latencyScore}</td>
-                  <td className="py-3.5 px-4">{modelB.latencyScore}</td>
-                </tr>
-                <tr>
-                  <td className="py-3.5 px-4 font-medium text-text-secondary">MMLU Benchmark Score</td>
-                  <td className="py-3.5 px-4 font-mono text-text-primary">{modelA.benchmarks?.mmlu || 'N/A'}%</td>
-                  <td className="py-3.5 px-4 font-mono text-text-primary">{modelB.benchmarks?.mmlu || 'N/A'}%</td>
-                </tr>
-                <tr>
-                  <td className="py-3.5 px-4 font-medium text-text-secondary">Code Benchmark (HumanEval)</td>
-                  <td className="py-3.5 px-4 font-mono text-text-primary">{modelA.benchmarks?.code || 'N/A'}%</td>
-                  <td className="py-3.5 px-4 font-mono text-text-primary">{modelB.benchmarks?.code || 'N/A'}%</td>
-                </tr>
-              </tbody>
-            </table>
+          <div className="terminal-card rounded-xl p-5 border border-[#1E2638] space-y-4">
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <Shield className="w-4 h-4 text-blue-400" />
+              Quick Specs Comparison
+            </h2>
+            <div className="space-y-3 text-xs">
+              <div className="p-3 rounded-lg bg-[#0E121B] border border-[#1E2638]">
+                <div className="text-[#64748B] text-[10px] uppercase">Context Window</div>
+                <div className="text-white font-bold mt-0.5">
+                  {formatContextWindow(modelA.contextWindow)} vs {formatContextWindow(modelB.contextWindow)}
+                </div>
+              </div>
+              <div className="p-3 rounded-lg bg-[#0E121B] border border-[#1E2638]">
+                <div className="text-[#64748B] text-[10px] uppercase">Throughput Speed</div>
+                <div className="text-white font-bold mt-0.5">
+                  {modelA.speedTokensPerSec || 80} tok/s vs {modelB.speedTokensPerSec || 80} tok/s
+                </div>
+              </div>
+              <div className="p-3 rounded-lg bg-[#0E121B] border border-[#1E2638]">
+                <div className="text-[#64748B] text-[10px] uppercase">Weights Visibility</div>
+                <div className="text-white font-bold mt-0.5">
+                  {modelA.isOpenWeights ? 'Open Weights' : 'Proprietary API'} vs{' '}
+                  {modelB.isOpenWeights ? 'Open Weights' : 'Proprietary API'}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Other Comparisons Navigation */}
-        <div className="my-12">
-          <h3 className="text-lg font-bold text-text-primary mb-4">
-            More Popular Head-to-Head Comparisons
+        {/* Other Comparisons Grid */}
+        <div className="pt-8 border-t border-[#1E2638]">
+          <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4">
+            Explore Other Head-to-Head Comparisons
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {POPULAR_COMPARISONS.filter((c) => c.slug !== params.slug).map((comp) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {POPULAR_COMPARISONS.filter((c) => c.slug !== params.slug).map((c) => (
               <Link
-                key={comp.slug}
-                href={`/compare/${comp.slug}`}
-                className="rounded-xl border border-border bg-surface p-4 hover:border-brand transition-colors block"
+                key={c.slug}
+                href={`/compare/${c.slug}`}
+                className="p-3 rounded-lg bg-[#0E121B] border border-[#1E2638] hover:border-[#10B981] transition-all text-xs text-[#CBD5E1] flex items-center justify-between"
               >
-                <h4 className="text-xs font-bold text-text-primary mb-1">{comp.title}</h4>
-                <p className="text-[11px] text-text-muted truncate">{comp.subtitle}</p>
+                <span>{c.title.split(':')[0]}</span>
+                <span className="text-[#10B981]">→</span>
               </Link>
             ))}
           </div>
         </div>
 
+        {/* Bottom Ad */}
+        <AdPlacement slotId="compare-bottom-ad" format="horizontal-leaderboard" className="mt-10" />
       </div>
     </div>
   );

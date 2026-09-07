@@ -4,145 +4,130 @@ import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { AI_MODELS } from '@/data/models';
 import AdPlacement from '@/components/AdPlacement';
-import { formatNumber } from '@/lib/calculator';
-import { Search, Filter, ArrowRight, ArrowLeft, Table as TableIcon, Sparkles } from 'lucide-react';
+import { formatContextWindow } from '@/lib/calculator';
+import { ArrowLeft, Search, Filter, Terminal, ExternalLink } from 'lucide-react';
 
 export default function PricingTablePage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [providerFilter, setProviderFilter] = useState('all');
-  const [tierFilter, setTierFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [providerFilter, setProviderFilter] = useState('All');
 
   const filtered = useMemo(() => {
     return AI_MODELS.filter((m) => {
-      const matchesSearch =
-        m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesProvider =
-        providerFilter === 'all' || m.providerSlug === providerFilter;
-      const matchesTier = tierFilter === 'all' || m.qualityTier === tierFilter;
-      return matchesSearch && matchesProvider && matchesTier;
+      const matchSearch =
+        m.name.toLowerCase().includes(search.toLowerCase()) ||
+        m.provider.toLowerCase().includes(search.toLowerCase());
+      const matchProvider = providerFilter === 'All' || m.provider === providerFilter;
+      return matchSearch && matchProvider;
     });
-  }, [searchQuery, providerFilter, tierFilter]);
+  }, [search, providerFilter]);
 
   return (
-    <div className="w-full py-8 md:py-12">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className="w-full min-h-screen bg-[#080A0F] text-[#E2E8F0] font-mono">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs text-text-muted mb-6">
-          <Link href="/" className="hover:text-text-primary flex items-center gap-1">
-            <ArrowLeft className="h-3 w-3" />
-            <span>Home</span>
-          </Link>
-          <span>/</span>
-          <span className="text-brand font-mono">2026-model-index</span>
-        </div>
+        {/* Back Link */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-xs text-[#94A3B8] hover:text-white transition-colors mb-6"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Tokenomics Workbench
+        </Link>
 
-        {/* Header */}
-        <div className="max-w-3xl mb-8">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs font-mono text-brand mb-3">
-            <TableIcon className="h-3.5 w-3.5" />
-            <span>Master AI Model Index</span>
+        {/* Top Header */}
+        <div className="mb-8 pb-6 border-b border-[#1E2638]">
+          <div className="flex items-center gap-2 text-xs text-[#10B981] font-semibold uppercase tracking-wider mb-2">
+            <Terminal className="w-4 h-4" />
+            Master Reference Matrix
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text-primary">
-            Complete LLM API Token Pricing Directory (2026)
+          <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">
+            Comprehensive AI Model Pricing Index
           </h1>
-          <p className="mt-3 text-base text-text-secondary leading-relaxed">
-            Standardized token rates, context windows, prompt caching discounts, and benchmark scores across all major production AI models.
+          <p className="text-xs text-[#94A3B8] mt-2 max-w-2xl leading-relaxed">
+            Direct comparison of input, output, and cached token pricing across OpenAI, Anthropic, Google, DeepSeek, Meta, and Mistral.
           </p>
         </div>
 
-        {/* Search & Filter Controls */}
-        <div className="rounded-xl border border-border bg-surface p-4 sm:p-5 mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full md:w-96">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
+        {/* Top Sponsor */}
+        <AdPlacement slotId="pricing-table-top" format="horizontal-leaderboard" />
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 my-6">
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 text-[#64748B] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search model by name, provider, or capability..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-border bg-surface-subtle pl-10 pr-4 py-2 text-xs text-text-primary focus:border-brand focus:outline-none placeholder:text-text-muted"
+              placeholder="Search model or provider..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 rounded-lg bg-[#0E121B] border border-[#1E2638] text-xs font-mono text-white placeholder-[#64748B] focus:outline-none focus:border-[#10B981]"
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-            <select
-              value={providerFilter}
-              onChange={(e) => setProviderFilter(e.target.value)}
-              className="rounded-lg border border-border bg-surface-subtle px-3 py-2 text-xs font-medium text-text-primary focus:border-brand focus:outline-none"
-            >
-              <option value="all">All Providers</option>
-              <option value="openai">OpenAI</option>
-              <option value="anthropic">Anthropic</option>
-              <option value="google">Google</option>
-              <option value="deepseek">DeepSeek</option>
-              <option value="meta">Meta Llama</option>
-              <option value="mistral">Mistral</option>
-            </select>
-
-            <select
-              value={tierFilter}
-              onChange={(e) => setTierFilter(e.target.value)}
-              className="rounded-lg border border-border bg-surface-subtle px-3 py-2 text-xs font-medium text-text-primary focus:border-brand focus:outline-none"
-            >
-              <option value="all">All Quality Tiers</option>
-              <option value="Flagship / Frontier">Flagship / Frontier</option>
-              <option value="High-Efficiency">High-Efficiency</option>
-              <option value="Lightweight / Fast">Lightweight / Fast</option>
-              <option value="Reasoning Heavy">Reasoning Heavy</option>
-            </select>
+          <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto text-[11px]">
+            {['All', 'OpenAI', 'Anthropic', 'Google', 'DeepSeek', 'Meta (Hosted)', 'Mistral'].map(
+              (p) => (
+                <button
+                  key={p}
+                  onClick={() => setProviderFilter(p)}
+                  className={`px-3 py-1.5 rounded-md transition-all whitespace-nowrap ${
+                    providerFilter === p
+                      ? 'bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/40 font-bold'
+                      : 'text-[#94A3B8] hover:text-white bg-[#0E121B] border border-[#1E2638]'
+                  }`}
+                >
+                  {p}
+                </button>
+              )
+            )}
           </div>
         </div>
 
-        {/* Ad */}
-        <AdPlacement slotId="table-page-top" format="horizontal-leaderboard" />
-
         {/* Master Table */}
-        <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-md my-8">
+        <div className="terminal-card rounded-xl overflow-hidden border border-[#1E2638]">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left text-xs font-mono">
               <thead>
-                <tr className="border-b border-border bg-surface-subtle font-mono text-xs uppercase tracking-wider text-text-muted">
-                  <th className="py-4 px-4 sm:px-6">Model</th>
-                  <th className="py-4 px-3">Provider</th>
-                  <th className="py-4 px-3 text-right">Input / 1M</th>
-                  <th className="py-4 px-3 text-right">Output / 1M</th>
-                  <th className="py-4 px-3 text-right">Cached / 1M</th>
-                  <th className="py-4 px-3">Context</th>
-                  <th className="py-4 px-3">Latency</th>
-                  <th className="py-4 px-4 text-center">Details</th>
+                <tr className="border-b border-[#1E2638] bg-[#0A0D14] text-[#64748B] uppercase text-[10px] tracking-wider">
+                  <th className="py-3 px-4">Model Name</th>
+                  <th className="py-3 px-3">Provider</th>
+                  <th className="py-3 px-3">Tier</th>
+                  <th className="py-3 px-3">Context Window</th>
+                  <th className="py-3 px-3">Input / 1M</th>
+                  <th className="py-3 px-3">Cached / 1M</th>
+                  <th className="py-3 px-3">Output / 1M</th>
+                  <th className="py-3 px-4 text-center">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border text-sm">
+              <tbody className="divide-y divide-[#1E2638]/60">
                 {filtered.map((m) => (
-                  <tr key={m.id} className="hover:bg-surface-hover/80 transition-colors">
-                    <td className="py-4 px-4 sm:px-6 font-semibold text-text-primary">
-                      <Link href={`/model/${m.id}`} className="hover:text-brand transition-colors">
+                  <tr key={m.id} className="hover:bg-[#141A26]/50 transition-colors">
+                    <td className="py-3 px-4 font-bold text-white">
+                      <Link href={`/model/${m.id}`} className="hover:text-[#10B981] transition-colors">
                         {m.name}
                       </Link>
                     </td>
-                    <td className="py-4 px-3 text-xs text-text-secondary">{m.provider}</td>
-                    <td className="py-4 px-3 text-right font-mono text-brand font-medium">
-                      ${m.inputCostPer1M}
+                    <td className="py-3 px-3 text-[#94A3B8]">
+                      <span className="px-2 py-0.5 rounded bg-[#171E2E] border border-[#232D42] text-[10px]">
+                        {m.provider}
+                      </span>
                     </td>
-                    <td className="py-4 px-3 text-right font-mono text-text-primary">
-                      ${m.outputCostPer1M}
+                    <td className="py-3 px-3 text-[#94A3B8]">{m.qualityTier}</td>
+                    <td className="py-3 px-3 text-[#CBD5E1]">{formatContextWindow(m.contextWindow)}</td>
+                    <td className="py-3 px-3 text-white font-medium">
+                      ${m.inputCostPer1M.toFixed(2)}
                     </td>
-                    <td className="py-4 px-3 text-right font-mono text-accent-emerald text-xs">
-                      {m.cachedInputCostPer1M ? `$${m.cachedInputCostPer1M}` : '—'}
+                    <td className="py-3 px-3 text-emerald-400">
+                      {(m.cachedInputCostPer1M ?? 0) > 0 ? `$${m.cachedInputCostPer1M!.toFixed(2)}` : '—'}
                     </td>
-                    <td className="py-4 px-3 font-mono text-xs text-text-muted">
-                      {formatNumber(m.contextWindow)}
+                    <td className="py-3 px-3 text-white font-medium">
+                      ${m.outputCostPer1M.toFixed(2)}
                     </td>
-                    <td className="py-4 px-3 text-xs">{m.latencyScore}</td>
-                    <td className="py-4 px-4 text-center">
+                    <td className="py-3 px-4 text-center">
                       <Link
                         href={`/model/${m.id}`}
-                        className="inline-flex items-center gap-1 rounded border border-border bg-surface-subtle px-2.5 py-1 text-xs text-text-secondary hover:text-white hover:border-brand"
+                        className="text-[11px] text-[#10B981] hover:underline"
                       >
-                        <span>View</span>
-                        <ArrowRight className="h-3 w-3" />
+                        Details →
                       </Link>
                     </td>
                   </tr>
@@ -152,6 +137,8 @@ export default function PricingTablePage() {
           </div>
         </div>
 
+        {/* Bottom Sponsor */}
+        <AdPlacement slotId="pricing-table-bottom" format="horizontal-leaderboard" className="mt-10" />
       </div>
     </div>
   );

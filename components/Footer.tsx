@@ -1,108 +1,121 @@
 import React from 'react';
 import Link from 'next/link';
 import { POPULAR_COMPARISONS, AI_MODELS } from '@/data/models';
+import { Terminal } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="w-full border-t border-border bg-surface-subtle py-12 text-xs text-text-secondary">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <footer className="w-full border-t border-[#1E2638] bg-[#06080C] text-xs font-mono text-[#94A3B8] py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+        {/* Top Footer Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pb-10 border-b border-[#1E2638]/60">
           
-          {/* Col 1: Brand & Identity */}
-          <div className="space-y-3">
+          {/* Col 1: Brand & Ethos */}
+          <div className="col-span-2 md:col-span-1 space-y-3">
             <div className="flex items-center gap-2">
-              <span className="font-mono text-sm font-bold text-brand">&gt;_</span>
-              <span className="text-sm font-bold text-text-primary">APICostHub.com</span>
+              <div className="w-6 h-6 rounded bg-[#10B981]/10 border border-[#10B981]/30 flex items-center justify-center text-[#10B981]">
+                <Terminal className="w-3.5 h-3.5" />
+              </div>
+              <span className="font-semibold text-white tracking-tight text-sm">
+                API<span className="text-[#10B981]">Cost</span>Hub
+              </span>
             </div>
-            <p className="text-xs text-text-muted leading-relaxed">
-              Open-access developer utility for AI token economics, LLM price simulation, and cloud GPU breakeven analysis.
+            <p className="text-[11px] text-[#64748B] leading-relaxed">
+              Open-source unit economics workbench and real-time inference pricing index for machine learning engineers and tech founders.
             </p>
-            <p className="text-[11px] text-text-muted">
-              Built with Astro/Next.js and client-side Web Workers for zero-latency instant calculation.
-            </p>
+            <div className="text-[10px] text-[#475569]">
+              Indexed: OpenAI, Anthropic, Google, DeepSeek, Meta, Mistral.
+            </div>
           </div>
 
-          {/* Col 2: Popular Comparisons (Programmatic Links) */}
-          <div>
-            <h4 className="font-mono text-xs font-semibold uppercase tracking-wider text-text-primary mb-3">
-              Head-to-Head Comparisons
-            </h4>
-            <ul className="space-y-2">
-              {POPULAR_COMPARISONS.slice(0, 5).map((comp) => (
-                <li key={comp.slug}>
+          {/* Col 2: Popular Comparisons */}
+          <div className="space-y-2">
+            <div className="text-[11px] font-bold text-white uppercase tracking-wider">
+              Model Comparisons
+            </div>
+            <ul className="space-y-1.5 text-[11px]">
+              {POPULAR_COMPARISONS.slice(0, 5).map((pair) => (
+                <li key={pair.slug}>
                   <Link
-                    href={`/compare/${comp.slug}`}
-                    className="hover:text-brand transition-colors truncate block"
+                    href={`/compare/${pair.slug}`}
+                    className="hover:text-[#10B981] transition-colors"
                   >
-                    {comp.title.replace(' Cost & Pricing Comparison', '').replace(' Token Cost Comparison', '')}
+                    {pair.title.split(':')[0]}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Col 3: Popular Models */}
-          <div>
-            <h4 className="font-mono text-xs font-semibold uppercase tracking-wider text-text-primary mb-3">
-              Model Price Indexes
-            </h4>
-            <ul className="space-y-2">
+          {/* Col 3: Dedicated Calculators */}
+          <div className="space-y-2">
+            <div className="text-[11px] font-bold text-white uppercase tracking-wider">
+              Calculators & Tools
+            </div>
+            <ul className="space-y-1.5 text-[11px]">
+              <li>
+                <Link href="/" className="hover:text-[#10B981] transition-colors">
+                  Tokenomics Workbench
+                </Link>
+              </li>
+              <li>
+                <Link href="/#head-to-head" className="hover:text-[#10B981] transition-colors">
+                  Head-to-Head Diff
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/calculator/gpu-vs-api"
+                  className="hover:text-[#10B981] transition-colors"
+                >
+                  GPU vs API Breakeven
+                </Link>
+              </li>
+              <li>
+                <Link href="/pricing-table" className="hover:text-[#10B981] transition-colors">
+                  Master Pricing Matrix
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Col 4: Reference & Open Weights */}
+          <div className="space-y-2">
+            <div className="text-[11px] font-bold text-white uppercase tracking-wider">
+              Models Indexed
+            </div>
+            <ul className="space-y-1.5 text-[11px]">
               {AI_MODELS.slice(0, 5).map((m) => (
                 <li key={m.id}>
-                  <Link
-                    href={`/model/${m.id}`}
-                    className="hover:text-brand transition-colors flex items-center justify-between"
-                  >
-                    <span>{m.name}</span>
-                    <span className="font-mono text-[10px] text-text-muted">${m.inputCostPer1M}/1M</span>
+                  <Link href={`/model/${m.id}`} className="hover:text-[#10B981] transition-colors">
+                    {m.name} Pricing
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
+        </div>
 
-          {/* Col 4: Tools & Resources */}
+        {/* Bottom Bar */}
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-[#64748B] gap-3">
           <div>
-            <h4 className="font-mono text-xs font-semibold uppercase tracking-wider text-text-primary mb-3">
-              Calculators & Tools
-            </h4>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/" className="hover:text-brand transition-colors">
-                  Multi-Model Cost Calculator
-                </Link>
-              </li>
-              <li>
-                <Link href="/calculator/gpu-vs-api" className="hover:text-brand transition-colors">
-                  Self-Hosted GPU vs API Breakeven
-                </Link>
-              </li>
-              <li>
-                <Link href="/pricing-table" className="hover:text-brand transition-colors">
-                  Full 2026 Model Index Table
-                </Link>
-              </li>
-              <li>
-                <Link href="/compare/gpt-4o-vs-claude-3-5-sonnet" className="hover:text-brand transition-colors">
-                  Prompt Caching Savings Simulator
-                </Link>
-              </li>
-            </ul>
+            © {new Date().getFullYear()} APICostHub. Built for AI infrastructure transparency.
           </div>
-
-        </div>
-
-        {/* Bottom line */}
-        <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <p className="text-[11px] text-text-muted">
-            © 2026 APICostHub. All model names and trademarks belong to their respective creators (OpenAI, Anthropic, Google, DeepSeek, Meta, Mistral).
-          </p>
-          <div className="flex items-center gap-4 text-[11px] text-text-muted">
-            <span>Client-Side Privacy Safe (Zero Logged Inputs)</span>
+          <div className="flex items-center gap-4">
+            <Link href="/sitemap.xml" className="hover:underline">
+              Sitemap
+            </Link>
+            <a
+              href="https://github.com/tantenton/apicosthub"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:underline"
+            >
+              GitHub
+            </a>
           </div>
         </div>
-
       </div>
     </footer>
   );
