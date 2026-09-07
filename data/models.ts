@@ -1,3 +1,24 @@
+export interface ModelBenchmarks {
+  sweBenchVerified?: number; // % resolved (0-100)
+  mmluPro?: number; // % accuracy (0-100)
+  arenaElo?: number; // Chatbot arena Elo score
+  gpqaDiamond?: number; // % (0-100)
+  humaneval?: number; // % (0-100)
+}
+
+export interface HostingProviderQuote {
+  providerName: string;
+  providerSlug: string;
+  inputPricePerMillion: number;
+  outputPricePerMillion: number;
+  cachedInputPricePerMillion?: number;
+  ttftMedianMs: number;
+  speedTokensPerSec: number;
+  contextWindow: number;
+  uptime90d: number;
+  isRecommended?: boolean;
+}
+
 export interface AIModel {
   id: string;
   slug: string;
@@ -23,6 +44,11 @@ export interface AIModel {
   recommended?: boolean;
   recommendedFor: string[];
   isOpenWeights?: boolean;
+  benchmarks?: ModelBenchmarks;
+  supportsVision?: boolean;
+  supportsReasoning?: boolean;
+  supportsToolCalling?: boolean;
+  hostingQuotes?: HostingProviderQuote[];
 }
 
 export interface WorkloadPreset {
@@ -174,6 +200,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'frontier',
     knowledgeCutoff: 'Sep 2026',
     description: 'Googles flagship multimodal speed engine with 1M context, real-time audio/video streaming, and native tool execution.',
+    benchmarks: { sweBenchVerified: 64.2, mmluPro: 87.2, arenaElo: 1395, gpqaDiamond: 74.0, humaneval: 92.4 },
+    supportsVision: true,
+    supportsReasoning: false,
+    supportsToolCalling: true,
     recommended: true,
     recommendedFor: ['Real-time streaming agents', 'High-volume tool execution', 'Interactive UI assistants'],
   },
@@ -199,6 +229,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'frontier',
     knowledgeCutoff: 'Mid 2026',
     description: 'High-speed multimodal agentic workhorse with hybrid tool chaining and low-latency token dispatch.',
+    benchmarks: { sweBenchVerified: 61.8, mmluPro: 85.4, arenaElo: 1378, gpqaDiamond: 72.5, humaneval: 90.8 },
+    supportsVision: true,
+    supportsReasoning: false,
+    supportsToolCalling: true,
     recommended: true,
     recommendedFor: ['Interactive voice agents', 'Real-time video synthesis', 'Sub-second coding assistants'],
   },
@@ -224,6 +258,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'fast',
     knowledgeCutoff: 'Sep 2026',
     description: 'Ultra-high-throughput lightweight model optimized for high-velocity query routing and high-volume data pipelines.',
+    benchmarks: { sweBenchVerified: 48.0, mmluPro: 78.5, arenaElo: 1320, gpqaDiamond: 62.0, humaneval: 84.5 },
+    supportsVision: true,
+    supportsReasoning: false,
+    supportsToolCalling: true,
     recommended: true,
     recommendedFor: ['Query routing', 'High-volume ETL', 'Instant auto-complete'],
   },
@@ -249,6 +287,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'reasoning',
     knowledgeCutoff: 'Sep 2026',
     description: 'Googles deep reasoning and advanced multimodal architecture with custom tools and massive codebase understanding.',
+    benchmarks: { sweBenchVerified: 71.5, mmluPro: 89.6, arenaElo: 1410, gpqaDiamond: 81.2, humaneval: 94.2 },
+    supportsVision: true,
+    supportsReasoning: true,
+    supportsToolCalling: true,
     recommendedFor: ['Complex software architecture', 'Multimodal scientific proof', 'Repository audits'],
   },
   {
@@ -273,6 +315,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'fast',
     knowledgeCutoff: '2025',
     description: 'Second-generation Flash workhorse with native real-time tool calling and sub-dime pricing.',
+    benchmarks: { sweBenchVerified: 44.5, mmluPro: 76.2, arenaElo: 1312, gpqaDiamond: 58.6, humaneval: 82.0 },
+    supportsVision: true,
+    supportsReasoning: false,
+    supportsToolCalling: true,
     recommendedFor: ['High-throughput extraction', 'Agent routing', 'Chat widgets'],
   },
   {
@@ -297,6 +343,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'reasoning',
     knowledgeCutoff: '2024',
     description: 'Googles 2M long-context foundation model for document audio/video corpus synthesis.',
+    benchmarks: { sweBenchVerified: 42.0, mmluPro: 74.0, arenaElo: 1295, gpqaDiamond: 56.4, humaneval: 81.0 },
+    supportsVision: true,
+    supportsReasoning: false,
+    supportsToolCalling: true,
     recommendedFor: ['Long document archive analysis', 'Full-length video comprehension'],
   },
   {
@@ -321,6 +371,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'fast',
     knowledgeCutoff: '2024',
     description: 'High-frequency 1M context lightweight model for bulk extraction and summaries.',
+    benchmarks: { sweBenchVerified: 36.5, mmluPro: 69.5, arenaElo: 1270, gpqaDiamond: 51.2, humaneval: 78.4 },
+    supportsVision: true,
+    supportsReasoning: false,
+    supportsToolCalling: true,
     recommendedFor: ['Batch summarization', 'Low-budget pipelines'],
   },
 
@@ -349,6 +403,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'frontier',
     knowledgeCutoff: 'Sep 2026',
     description: 'Anthropics premier 1M-context production model combining fluid reasoning with ultra-reliable instruction adherence.',
+    benchmarks: { sweBenchVerified: 78.5, mmluPro: 89.4, arenaElo: 1420, gpqaDiamond: 84.5, humaneval: 96.8 },
+    supportsVision: true,
+    supportsReasoning: true,
+    supportsToolCalling: true,
     recommended: true,
     recommendedFor: ['Full repository refactoring', 'Complex agent pipelines', 'Autonomous developer loops'],
   },
@@ -374,6 +432,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'frontier',
     knowledgeCutoff: 'Early 2025',
     description: 'Hybrid reasoning model capable of seamless standard generation and deep extended thinking modes.',
+    benchmarks: { sweBenchVerified: 72.4, mmluPro: 87.0, arenaElo: 1388, gpqaDiamond: 79.5, humaneval: 93.6 },
+    supportsVision: true,
+    supportsReasoning: true,
+    supportsToolCalling: true,
     recommended: true,
     recommendedFor: ['Complex coding', 'Agentic reasoning', 'Frontier benchmarks'],
   },
@@ -399,6 +461,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'coding',
     knowledgeCutoff: '2024',
     description: 'The industry-standard coding and analytical foundation model with 90% prompt caching discount.',
+    benchmarks: { sweBenchVerified: 49.2, mmluPro: 83.2, arenaElo: 1335, gpqaDiamond: 68.4, humaneval: 92.0 },
+    supportsVision: true,
+    supportsReasoning: false,
+    supportsToolCalling: true,
     recommended: true,
     recommendedFor: ['Software engineering', 'Technical document analysis', 'Complex tool workflows'],
   },
@@ -424,6 +490,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'fast',
     knowledgeCutoff: '2024',
     description: 'Fast, cost-effective model that matches Claude 3 Opus on standard benchmarks with near-instant streaming.',
+    benchmarks: { sweBenchVerified: 40.6, mmluPro: 75.8, arenaElo: 1302, gpqaDiamond: 54.2, humaneval: 85.0 },
+    supportsVision: true,
+    supportsReasoning: false,
+    supportsToolCalling: true,
     recommendedFor: ['Fast customer support', 'Short-form coding', 'Real-time text moderation'],
   },
   {
@@ -448,6 +518,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'reasoning',
     knowledgeCutoff: 'Sep 2026',
     description: 'Anthropics peak intelligence engine for rigorous scientific derivations, formal proofs, and multi-day agent planning.',
+    benchmarks: { sweBenchVerified: 84.2, mmluPro: 92.5, arenaElo: 1445, gpqaDiamond: 88.0, humaneval: 97.5 },
+    supportsVision: true,
+    supportsReasoning: true,
+    supportsToolCalling: true,
     recommendedFor: ['Formal verification', 'Scientific discovery', 'High-stakes regulatory analysis'],
   },
 
@@ -475,6 +549,16 @@ export const AI_MODELS: AIModel[] = [
     category: 'frontier',
     knowledgeCutoff: 'Sep 2026',
     description: 'DeepSeeks premier multi-modal MoE architecture delivering frontier-grade coding performance at radical cost efficiency.',
+    benchmarks: { sweBenchVerified: 74.0, mmluPro: 88.5, arenaElo: 1415, gpqaDiamond: 83.2, humaneval: 95.5 },
+    supportsVision: false,
+    supportsReasoning: true,
+    supportsToolCalling: true,
+    hostingQuotes: [
+      { providerName: 'DeepSeek Direct', providerSlug: 'deepseek', inputPricePerMillion: 1.05, outputPricePerMillion: 3.15, ttftMedianMs: 420, speedTokensPerSec: 85, contextWindow: 1048576, uptime90d: 99.92, isRecommended: true },
+      { providerName: 'Together AI', providerSlug: 'together', inputPricePerMillion: 1.15, outputPricePerMillion: 3.30, ttftMedianMs: 290, speedTokensPerSec: 110, contextWindow: 512000, uptime90d: 99.98 },
+      { providerName: 'Fireworks AI', providerSlug: 'fireworks', inputPricePerMillion: 1.20, outputPricePerMillion: 3.40, ttftMedianMs: 270, speedTokensPerSec: 125, contextWindow: 512000, uptime90d: 99.97 },
+      { providerName: 'DeepInfra', providerSlug: 'deepinfra', inputPricePerMillion: 0.98, outputPricePerMillion: 2.95, ttftMedianMs: 380, speedTokensPerSec: 90, contextWindow: 256000, uptime90d: 99.85 }
+    ],
     recommended: true,
     recommendedFor: ['Full-stack coding', 'Deep math modeling', 'Cost-optimized frontier tasks'],
     isOpenWeights: true,
@@ -500,6 +584,16 @@ export const AI_MODELS: AIModel[] = [
     category: 'fast',
     knowledgeCutoff: 'Sep 2026',
     description: 'Record-shattering price-to-performance ratio: $0.09/1M input with 1.3M context window and 310 tokens/second.',
+    benchmarks: { sweBenchVerified: 52.5, mmluPro: 81.2, arenaElo: 1345, gpqaDiamond: 66.8, humaneval: 88.2 },
+    supportsVision: false,
+    supportsReasoning: false,
+    supportsToolCalling: true,
+    hostingQuotes: [
+      { providerName: 'DeepSeek Direct', providerSlug: 'deepseek', inputPricePerMillion: 0.09, outputPricePerMillion: 0.18, ttftMedianMs: 260, speedTokensPerSec: 310, contextWindow: 512000, uptime90d: 99.95, isRecommended: true },
+      { providerName: 'Groq LPU', providerSlug: 'groq', inputPricePerMillion: 0.12, outputPricePerMillion: 0.24, ttftMedianMs: 140, speedTokensPerSec: 460, contextWindow: 256000, uptime90d: 99.99 },
+      { providerName: 'Fireworks AI', providerSlug: 'fireworks', inputPricePerMillion: 0.10, outputPricePerMillion: 0.20, ttftMedianMs: 190, speedTokensPerSec: 340, contextWindow: 256000, uptime90d: 99.96 },
+      { providerName: 'DeepInfra', providerSlug: 'deepinfra', inputPricePerMillion: 0.08, outputPricePerMillion: 0.16, ttftMedianMs: 280, speedTokensPerSec: 290, contextWindow: 128000, uptime90d: 99.88 }
+    ],
     recommended: true,
     recommendedFor: ['High-volume scraping', 'Bulk translation', 'Real-time telemetry filtering'],
     isOpenWeights: true,
@@ -525,6 +619,17 @@ export const AI_MODELS: AIModel[] = [
     category: 'frontier',
     knowledgeCutoff: 'Late 2024',
     description: '671B parameter Mixture-of-Experts model (37B active) delivering frontier benchmarks at fractional cost.',
+    benchmarks: { sweBenchVerified: 48.0, mmluPro: 78.0, arenaElo: 1325, gpqaDiamond: 63.5, humaneval: 86.4 },
+    supportsVision: false,
+    supportsReasoning: false,
+    supportsToolCalling: true,
+    hostingQuotes: [
+      { providerName: 'DeepSeek Direct', providerSlug: 'deepseek', inputPricePerMillion: 0.14, outputPricePerMillion: 0.28, ttftMedianMs: 380, speedTokensPerSec: 110, contextWindow: 131072, uptime90d: 99.91, isRecommended: true },
+      { providerName: 'Fireworks AI', providerSlug: 'fireworks', inputPricePerMillion: 0.20, outputPricePerMillion: 0.28, ttftMedianMs: 240, speedTokensPerSec: 135, contextWindow: 131072, uptime90d: 99.97 },
+      { providerName: 'Together AI', providerSlug: 'together', inputPricePerMillion: 0.22, outputPricePerMillion: 0.30, ttftMedianMs: 260, speedTokensPerSec: 125, contextWindow: 131072, uptime90d: 99.96 },
+      { providerName: 'DeepInfra', providerSlug: 'deepinfra', inputPricePerMillion: 0.15, outputPricePerMillion: 0.25, ttftMedianMs: 350, speedTokensPerSec: 105, contextWindow: 131072, uptime90d: 99.89 },
+      { providerName: 'Novita AI', providerSlug: 'novita', inputPricePerMillion: 0.14, outputPricePerMillion: 0.28, ttftMedianMs: 390, speedTokensPerSec: 100, contextWindow: 131072, uptime90d: 99.82 }
+    ],
     recommended: true,
     recommendedFor: ['Cost-sensitive enterprise production', 'Code generation', 'Multilingual translation'],
     isOpenWeights: true,
@@ -550,6 +655,17 @@ export const AI_MODELS: AIModel[] = [
     category: 'reasoning',
     knowledgeCutoff: 'Early 2025',
     description: 'Open-weights reasoning model trained via large-scale reinforcement learning, matching frontier reasoning on math and code.',
+    benchmarks: { sweBenchVerified: 65.2, mmluPro: 84.0, arenaElo: 1365, gpqaDiamond: 75.8, humaneval: 91.0 },
+    supportsVision: false,
+    supportsReasoning: true,
+    supportsToolCalling: false,
+    hostingQuotes: [
+      { providerName: 'DeepSeek Direct', providerSlug: 'deepseek', inputPricePerMillion: 0.55, outputPricePerMillion: 2.19, ttftMedianMs: 580, speedTokensPerSec: 45, contextWindow: 131072, uptime90d: 99.88, isRecommended: true },
+      { providerName: 'Groq LPU', providerSlug: 'groq', inputPricePerMillion: 0.75, outputPricePerMillion: 2.50, ttftMedianMs: 210, speedTokensPerSec: 180, contextWindow: 131072, uptime90d: 99.98 },
+      { providerName: 'Together AI', providerSlug: 'together', inputPricePerMillion: 0.65, outputPricePerMillion: 2.40, ttftMedianMs: 320, speedTokensPerSec: 75, contextWindow: 131072, uptime90d: 99.95 },
+      { providerName: 'Fireworks AI', providerSlug: 'fireworks', inputPricePerMillion: 0.70, outputPricePerMillion: 2.45, ttftMedianMs: 290, speedTokensPerSec: 85, contextWindow: 131072, uptime90d: 99.96 },
+      { providerName: 'DeepInfra', providerSlug: 'deepinfra', inputPricePerMillion: 0.50, outputPricePerMillion: 2.00, ttftMedianMs: 510, speedTokensPerSec: 50, contextWindow: 131072, uptime90d: 99.85 }
+    ],
     recommended: true,
     recommendedFor: ['Math & STEM problem solving', 'Complex algorithmic puzzles', 'Proof verification'],
     isOpenWeights: true,
@@ -580,6 +696,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'frontier',
     knowledgeCutoff: 'Sep 2026',
     description: 'OpenAIs next-generation omni-reasoning frontier engine with native continuous thought chains and 1.05M context.',
+    benchmarks: { sweBenchVerified: 82.5, mmluPro: 93.4, arenaElo: 1450, gpqaDiamond: 89.2, humaneval: 98.0 },
+    supportsVision: true,
+    supportsReasoning: true,
+    supportsToolCalling: true,
     recommended: true,
     recommendedFor: ['Peak autonomous tasks', 'Advanced STEM proofs', 'Complex orchestration'],
   },
@@ -605,6 +725,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'reasoning',
     knowledgeCutoff: 'Sep 2026',
     description: 'Workhorse reasoning engine designed for enterprise coding assistants, schema enforcement, and tool routing.',
+    benchmarks: { sweBenchVerified: 74.8, mmluPro: 89.0, arenaElo: 1412, gpqaDiamond: 82.4, humaneval: 95.0 },
+    supportsVision: true,
+    supportsReasoning: true,
+    supportsToolCalling: true,
     recommended: true,
     recommendedFor: ['Production code generation', 'Database schema migration', 'Multi-turn API flows'],
   },
@@ -630,6 +754,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'frontier',
     knowledgeCutoff: '2024',
     description: 'OpenAIs flagship multimodal model for text, vision, and high-quality structured JSON outputs.',
+    benchmarks: { sweBenchVerified: 38.8, mmluPro: 79.2, arenaElo: 1285, gpqaDiamond: 56.1, humaneval: 90.2 },
+    supportsVision: true,
+    supportsReasoning: false,
+    supportsToolCalling: true,
     recommended: true,
     recommendedFor: ['Structured JSON extraction', 'Vision understanding', 'General reasoning'],
   },
@@ -655,6 +783,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'fast',
     knowledgeCutoff: '2024',
     description: 'Cost-efficient small model replacing GPT-3.5 Turbo with stronger intelligence and multimodal vision.',
+    benchmarks: { sweBenchVerified: 28.5, mmluPro: 70.4, arenaElo: 1255, gpqaDiamond: 48.2, humaneval: 87.2 },
+    supportsVision: true,
+    supportsReasoning: false,
+    supportsToolCalling: true,
     recommendedFor: ['High-volume API classification', 'Customer service chatbots', 'Light extraction'],
   },
   {
@@ -679,6 +811,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'reasoning',
     knowledgeCutoff: 'Early 2025',
     description: 'Cost-effective STEM reasoning model optimized for science, math, and coding with configurable reasoning effort.',
+    benchmarks: { sweBenchVerified: 71.2, mmluPro: 86.8, arenaElo: 1375, gpqaDiamond: 79.8, humaneval: 92.5 },
+    supportsVision: false,
+    supportsReasoning: true,
+    supportsToolCalling: true,
     recommended: true,
     recommendedFor: ['Code generation with verification', 'Competitive math', 'Complex logic flows'],
   },
@@ -704,6 +840,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'reasoning',
     knowledgeCutoff: 'Late 2024',
     description: 'Frontier reasoning model utilizing deep chain-of-thought before answering for ultra-hard logic challenges.',
+    benchmarks: { sweBenchVerified: 77.0, mmluPro: 90.2, arenaElo: 1410, gpqaDiamond: 85.0, humaneval: 95.2 },
+    supportsVision: true,
+    supportsReasoning: true,
+    supportsToolCalling: true,
     recommendedFor: ['PhD-level biology/physics', 'Complex multi-step security auditing', 'Mathematical proofs'],
   },
 
@@ -732,6 +872,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'frontier',
     knowledgeCutoff: 'Sep 2026',
     description: 'xAI flagship model powered by real-time X news stream integration, high-density STEM intuition, and 500K context.',
+    benchmarks: { sweBenchVerified: 73.0, mmluPro: 88.0, arenaElo: 1398, gpqaDiamond: 80.5, humaneval: 93.8 },
+    supportsVision: true,
+    supportsReasoning: true,
+    supportsToolCalling: true,
     recommended: true,
     recommendedFor: ['Real-time news synthesis', 'Market sentiment analytics', 'Technical dispute resolution'],
   },
@@ -757,6 +901,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'coding',
     knowledgeCutoff: 'Sep 2026',
     description: 'Massive 2M context window with native multi-agent coordination protocol built specifically for swarm automation.',
+    benchmarks: { sweBenchVerified: 66.4, mmluPro: 84.5, arenaElo: 1370, gpqaDiamond: 74.2, humaneval: 91.0 },
+    supportsVision: true,
+    supportsReasoning: false,
+    supportsToolCalling: true,
     recommendedFor: ['Multi-agent swarms', 'Long-context legal discovery', 'Autonomous simulation'],
   },
 
@@ -782,6 +930,16 @@ export const AI_MODELS: AIModel[] = [
     category: 'frontier',
     knowledgeCutoff: 'Sep 2026',
     description: 'Metas premier open-weights foundation model with 1M context, state-of-the-art multilingual comprehension, and tool usage.',
+    benchmarks: { sweBenchVerified: 68.5, mmluPro: 85.2, arenaElo: 1385, gpqaDiamond: 76.0, humaneval: 92.8 },
+    supportsVision: true,
+    supportsReasoning: false,
+    supportsToolCalling: true,
+    hostingQuotes: [
+      { providerName: 'Together AI', providerSlug: 'together', inputPricePerMillion: 0.20, outputPricePerMillion: 0.70, ttftMedianMs: 240, speedTokensPerSec: 190, contextWindow: 512000, uptime90d: 99.97, isRecommended: true },
+      { providerName: 'Groq LPU', providerSlug: 'groq', inputPricePerMillion: 0.28, outputPricePerMillion: 0.85, ttftMedianMs: 150, speedTokensPerSec: 380, contextWindow: 256000, uptime90d: 99.99 },
+      { providerName: 'Fireworks AI', providerSlug: 'fireworks', inputPricePerMillion: 0.22, outputPricePerMillion: 0.72, ttftMedianMs: 220, speedTokensPerSec: 210, contextWindow: 512000, uptime90d: 99.96 },
+      { providerName: 'DeepInfra', providerSlug: 'deepinfra', inputPricePerMillion: 0.18, outputPricePerMillion: 0.65, ttftMedianMs: 310, speedTokensPerSec: 170, contextWindow: 128000, uptime90d: 99.86 }
+    ],
     recommended: true,
     recommendedFor: ['On-premise deployments', 'Private corporate knowledge bases', 'Open-weights fine-tuning'],
     isOpenWeights: true,
@@ -805,6 +963,16 @@ export const AI_MODELS: AIModel[] = [
     category: 'coding',
     knowledgeCutoff: 'Late 2024',
     description: 'State-of-the-art open weights 70B parameter model delivering performance comparable to earlier 405B releases.',
+    benchmarks: { sweBenchVerified: 46.0, mmluPro: 77.5, arenaElo: 1320, gpqaDiamond: 58.0, humaneval: 87.0 },
+    supportsVision: false,
+    supportsReasoning: false,
+    supportsToolCalling: true,
+    hostingQuotes: [
+      { providerName: 'DeepInfra', providerSlug: 'deepinfra', inputPricePerMillion: 0.45, outputPricePerMillion: 0.65, ttftMedianMs: 320, speedTokensPerSec: 120, contextWindow: 131072, uptime90d: 99.88, isRecommended: true },
+      { providerName: 'Together AI', providerSlug: 'together', inputPricePerMillion: 0.59, outputPricePerMillion: 0.79, ttftMedianMs: 270, speedTokensPerSec: 120, contextWindow: 131072, uptime90d: 99.96 },
+      { providerName: 'Fireworks AI', providerSlug: 'fireworks', inputPricePerMillion: 0.60, outputPricePerMillion: 0.80, ttftMedianMs: 250, speedTokensPerSec: 130, contextWindow: 131072, uptime90d: 99.95 },
+      { providerName: 'Groq LPU', providerSlug: 'groq', inputPricePerMillion: 0.75, outputPricePerMillion: 0.99, ttftMedianMs: 160, speedTokensPerSec: 280, contextWindow: 131072, uptime90d: 99.99 }
+    ],
     recommended: true,
     recommendedFor: ['Cost-effective open weights coding', 'Self-hosted enterprise workflows'],
     isOpenWeights: true,
@@ -835,6 +1003,10 @@ export const AI_MODELS: AIModel[] = [
     category: 'reasoning',
     knowledgeCutoff: 'Sep 2026',
     description: 'Mistrals refined European reasoning model with sovereign data compliance and deep algorithmic precision.',
+    benchmarks: { sweBenchVerified: 65.0, mmluPro: 83.5, arenaElo: 1362, gpqaDiamond: 73.0, humaneval: 90.5 },
+    supportsVision: true,
+    supportsReasoning: true,
+    supportsToolCalling: true,
     recommendedFor: ['EU compliance workloads', 'Algorithmic reasoning', 'Deterministic extraction'],
   },
   {
@@ -859,6 +1031,15 @@ export const AI_MODELS: AIModel[] = [
     category: 'coding',
     knowledgeCutoff: 'Sep 2026',
     description: 'Specialized coding foundation model fine-tuned on multi-language diff execution, lint resolution, and unit testing.',
+    benchmarks: { sweBenchVerified: 69.8, mmluPro: 81.0, arenaElo: 1350, gpqaDiamond: 71.5, humaneval: 94.0 },
+    supportsVision: false,
+    supportsReasoning: false,
+    supportsToolCalling: true,
+    hostingQuotes: [
+      { providerName: 'Mistral Platform', providerSlug: 'mistral', inputPricePerMillion: 0.40, outputPricePerMillion: 2.00, ttftMedianMs: 290, speedTokensPerSec: 190, contextWindow: 262144, uptime90d: 99.96, isRecommended: true },
+      { providerName: 'Together AI', providerSlug: 'together', inputPricePerMillion: 0.42, outputPricePerMillion: 2.05, ttftMedianMs: 270, speedTokensPerSec: 185, contextWindow: 262144, uptime90d: 99.95 },
+      { providerName: 'DeepInfra', providerSlug: 'deepinfra', inputPricePerMillion: 0.38, outputPricePerMillion: 1.90, ttftMedianMs: 330, speedTokensPerSec: 170, contextWindow: 131072, uptime90d: 99.87 }
+    ],
     recommended: true,
     recommendedFor: ['Automated PR review', 'Unit test generation', 'CI/CD error triage'],
     isOpenWeights: true,
@@ -883,6 +1064,15 @@ export const AI_MODELS: AIModel[] = [
     category: 'coding',
     knowledgeCutoff: 'Early 2025',
     description: 'Mistrals dedicated coding model with 256k context window and fill-in-the-middle code completion capabilities.',
+    benchmarks: { sweBenchVerified: 51.5, mmluPro: 74.0, arenaElo: 1290, gpqaDiamond: 55.0, humaneval: 88.0 },
+    supportsVision: false,
+    supportsReasoning: false,
+    supportsToolCalling: true,
+    hostingQuotes: [
+      { providerName: 'Mistral Platform', providerSlug: 'mistral', inputPricePerMillion: 0.30, outputPricePerMillion: 0.90, ttftMedianMs: 310, speedTokensPerSec: 130, contextWindow: 256000, uptime90d: 99.95, isRecommended: true },
+      { providerName: 'Together AI', providerSlug: 'together', inputPricePerMillion: 0.35, outputPricePerMillion: 1.00, ttftMedianMs: 280, speedTokensPerSec: 135, contextWindow: 256000, uptime90d: 99.94 },
+      { providerName: 'DeepInfra', providerSlug: 'deepinfra', inputPricePerMillion: 0.28, outputPricePerMillion: 0.85, ttftMedianMs: 340, speedTokensPerSec: 125, contextWindow: 128000, uptime90d: 99.88 }
+    ],
     recommendedFor: ['IDE autocomplete', 'Fill-in-the-middle code generation', 'Repository analysis'],
     isOpenWeights: true,
   },
