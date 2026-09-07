@@ -1,12 +1,12 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
-import { POPULAR_COMPARISONS, AI_MODELS, PopularComparisonPair } from '@/data/models';
+import { POPULAR_COMPARISONS, AI_MODELS } from '@/data/models';
 import HeadToHeadCalculator from '@/components/HeadToHeadCalculator';
 import AdPlacement from '@/components/AdPlacement';
 import { ProviderIcon } from '@/components/ProviderLogos';
 import Link from 'next/link';
-import { ArrowLeft, GitCompare, Zap, Shield, Sparkles, Terminal } from 'lucide-react';
+import { ArrowLeft, Zap, Shield, ChevronRight } from 'lucide-react';
 import { formatContextWindow } from '@/lib/calculator';
 
 interface ComparePageProps {
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: ComparePageProps): Promise<Me
   }
 
   return {
-    title: `${comparison.title} — Real-Time API Cost Calculator 2026`,
+    title: `${comparison.title}: Real-Time API Cost Calculator 2026`,
     description: comparison.subtitle,
     openGraph: {
       title: `${comparison.title} | APICostHub`,
@@ -54,26 +54,26 @@ export default function ComparePage({ params }: ComparePageProps) {
   }
 
   return (
-    <div className="w-full min-h-screen bg-[#080A0F] text-[#E2E8F0] font-mono">
+    <div className="w-full min-h-screen bg-[#090B10] text-[#E2E8F0]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         
         {/* Back Link */}
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs text-[#94A3B8] hover:text-white transition-colors mb-6"
+          className="inline-flex items-center gap-1.5 text-xs text-[#94A3B8] hover:text-white transition-colors mb-6 min-h-[36px]"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to Tokenomics Workbench
         </Link>
 
         {/* Top Header */}
-        <div className="mb-8 pb-6 border-b border-[#1E2638]">
-          <div className="flex items-center gap-3 text-xs text-[#10B981] font-semibold uppercase tracking-wider mb-3">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#141A26] border border-[#232D42]">
+        <div className="mb-8 pb-6 border-b border-[#1E2538]">
+          <div className="flex items-center gap-3 text-xs text-emerald-400 font-semibold uppercase tracking-wider mb-3">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#111520] border border-[#1E2538]">
               <ProviderIcon provider={modelA.provider} className="w-3.5 h-3.5" />
               <span>{modelA.name}</span>
             </div>
-            <span className="text-[#64748B]">vs</span>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#141A26] border border-[#232D42]">
+            <span className="text-[#94A3B8]">vs</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#111520] border border-[#1E2538]">
               <ProviderIcon provider={modelB.provider} className="w-3.5 h-3.5" />
               <span>{modelB.name}</span>
             </div>
@@ -100,26 +100,26 @@ export default function ComparePage({ params }: ComparePageProps) {
         {/* Deep Analysis & Recommendation */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-10">
           
-          <div className="terminal-card rounded-xl p-5 border border-[#1E2638] md:col-span-2 space-y-4">
+          <div className="surface-card rounded-xl p-5 md:col-span-2 space-y-4">
             <h2 className="text-base font-bold text-white flex items-center gap-2">
               <Zap className="w-4 h-4 text-emerald-400" />
-              Engineering Verdict & Architecture Guidance
+              Engineering Verdict and Architecture Guidance
             </h2>
             <div className="text-xs text-[#CBD5E1] space-y-3 leading-relaxed">
               <p>
                 When building production workloads, choosing between <strong>{modelA.name}</strong> and{' '}
                 <strong>{modelB.name}</strong> depends heavily on your token volume distribution and latency budgets.
               </p>
-              <div className="bg-[#0E121B] p-4 rounded-lg border border-[#1E2638] space-y-2">
+              <div className="bg-[#090B10] p-4 rounded-lg border border-[#1E2538] space-y-2">
                 <div className="font-bold text-white text-xs">Cost Factor Summary:</div>
                 <ul className="list-disc list-inside space-y-1 text-[#94A3B8]">
                   <li>
-                    <strong>Input Tokens:</strong> {modelA.name} costs ${modelA.inputCostPer1M}/1M vs{' '}
-                    {modelB.name} at ${modelB.inputCostPer1M}/1M.
+                    <strong>Input Tokens:</strong> {modelA.name} costs <span className="font-mono text-white">${modelA.inputCostPer1M}/1M</span> vs{' '}
+                    {modelB.name} at <span className="font-mono text-white">${modelB.inputCostPer1M}/1M</span>.
                   </li>
                   <li>
-                    <strong>Output Tokens:</strong> {modelA.name} costs ${modelA.outputCostPer1M}/1M vs{' '}
-                    {modelB.name} at ${modelB.outputCostPer1M}/1M.
+                    <strong>Output Tokens:</strong> {modelA.name} costs <span className="font-mono text-white">${modelA.outputCostPer1M}/1M</span> vs{' '}
+                    {modelB.name} at <span className="font-mono text-white">${modelB.outputCostPer1M}/1M</span>.
                   </li>
                   <li>
                     <strong>Prompt Caching:</strong>{' '}
@@ -132,26 +132,26 @@ export default function ComparePage({ params }: ComparePageProps) {
             </div>
           </div>
 
-          <div className="terminal-card rounded-xl p-5 border border-[#1E2638] space-y-4">
+          <div className="surface-card rounded-xl p-5 space-y-4">
             <h2 className="text-base font-bold text-white flex items-center gap-2">
               <Shield className="w-4 h-4 text-blue-400" />
               Quick Specs Comparison
             </h2>
             <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-lg bg-[#0E121B] border border-[#1E2638]">
-                <div className="text-[#64748B] text-[10px] uppercase">Context Window</div>
-                <div className="text-white font-bold mt-0.5">
+              <div className="p-3 rounded-lg bg-[#090B10] border border-[#1E2538]">
+                <div className="text-[#94A3B8] text-xs uppercase">Context Window</div>
+                <div className="text-white font-bold font-mono mt-0.5">
                   {formatContextWindow(modelA.contextWindow)} vs {formatContextWindow(modelB.contextWindow)}
                 </div>
               </div>
-              <div className="p-3 rounded-lg bg-[#0E121B] border border-[#1E2638]">
-                <div className="text-[#64748B] text-[10px] uppercase">Throughput Speed</div>
-                <div className="text-white font-bold mt-0.5">
+              <div className="p-3 rounded-lg bg-[#090B10] border border-[#1E2538]">
+                <div className="text-[#94A3B8] text-xs uppercase">Throughput Speed</div>
+                <div className="text-white font-bold font-mono mt-0.5">
                   {modelA.speedTokensPerSec || 80} tok/s vs {modelB.speedTokensPerSec || 80} tok/s
                 </div>
               </div>
-              <div className="p-3 rounded-lg bg-[#0E121B] border border-[#1E2638]">
-                <div className="text-[#64748B] text-[10px] uppercase">Weights Visibility</div>
+              <div className="p-3 rounded-lg bg-[#090B10] border border-[#1E2538]">
+                <div className="text-[#94A3B8] text-xs uppercase">Weights Visibility</div>
                 <div className="text-white font-bold mt-0.5">
                   {modelA.isOpenWeights ? 'Open Weights' : 'Proprietary API'} vs{' '}
                   {modelB.isOpenWeights ? 'Open Weights' : 'Proprietary API'}
@@ -162,8 +162,8 @@ export default function ComparePage({ params }: ComparePageProps) {
         </div>
 
         {/* Other Comparisons Grid */}
-        <div className="pt-8 border-t border-[#1E2638]">
-          <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4">
+        <div className="pt-8 border-t border-[#1E2538]">
+          <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-4">
             Explore Other Head-to-Head Comparisons
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -171,10 +171,10 @@ export default function ComparePage({ params }: ComparePageProps) {
               <Link
                 key={c.slug}
                 href={`/compare/${c.slug}`}
-                className="p-3 rounded-lg bg-[#0E121B] border border-[#1E2638] hover:border-[#10B981] transition-all text-xs text-[#CBD5E1] flex items-center justify-between"
+                className="p-3 rounded-lg bg-[#111520] border border-[#1E2538] hover:border-emerald-500 transition-all text-xs text-[#CBD5E1] flex items-center justify-between min-h-[44px]"
               >
                 <span>{c.title.split(':')[0]}</span>
-                <span className="text-[#10B981]">→</span>
+                <ChevronRight className="w-4 h-4 text-emerald-400" />
               </Link>
             ))}
           </div>

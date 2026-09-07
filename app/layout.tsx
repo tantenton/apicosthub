@@ -4,7 +4,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: 'AI & LLM API Cost Calculator 2026 | Compare Token Pricing — APICostHub',
+  title: 'AI & LLM API Cost Calculator 2026 | Compare Token Pricing: APICostHub',
   description:
     'Calculate and compare LLM API token costs across OpenAI, Anthropic, Google Gemini, DeepSeek, and Meta Llama. Real-time prompt caching savings, batch API discounts, and GPU breakeven simulator.',
   keywords: [

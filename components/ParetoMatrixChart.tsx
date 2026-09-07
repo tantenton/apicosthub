@@ -3,12 +3,12 @@
 import React, { useState } from 'react';
 import { AIModel, AI_MODELS } from '@/data/models';
 import { ProviderIcon } from './ProviderLogos';
-import { Zap, Sparkles, TrendingDown, Eye, Filter } from 'lucide-react';
+import { Layers, Crosshair, ArrowUpRight } from 'lucide-react';
 
 interface ModelBenchmarkPoint {
   model: AIModel;
   intelligenceScore: number; // 0 - 100
-  blendedCostPer1M: number; // (Input * 3 + Output * 1) / 4 roughly typical 3:1 ratio
+  blendedCostPer1M: number; // (Input * 3 + Output * 1) / 4
   isParetoFrontier?: boolean;
 }
 
@@ -54,52 +54,44 @@ export default function ParetoMatrixChart() {
     return true;
   });
 
-  // Chart dimensions & scaling
-  // X-axis: 0 to 15 ($ blended)
-  // Y-axis: 75 to 100 (Quality Score)
   const minScore = 78;
   const maxScore = 100;
   const maxCost = 16;
 
   const getCoords = (cost: number, score: number) => {
-    // Non-linear sqrt scale on X-axis to space out low-cost models cleanly
     const normX = Math.sqrt(Math.min(cost, maxCost)) / Math.sqrt(maxCost);
-    const xPercent = 8 + normX * 82; // 8% to 90%
+    const xPercent = 8 + normX * 82;
     const normY = (score - minScore) / (maxScore - minScore);
-    const yPercent = 90 - normY * 78; // inverted for SVG Y
+    const yPercent = 90 - normY * 78;
     return { x: xPercent, y: yPercent };
   };
 
   return (
-    <section className="mb-14 rounded-xl border border-[#1E2638] bg-[#0E121B] p-5 sm:p-7 relative overflow-hidden shadow-2xl">
-      {/* Background radial glow */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
-
+    <section className="mb-14 rounded-xl border border-[#1E2538] surface-card p-5 sm:p-7 relative shadow-xl">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[#1E2638]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[#1E2538]">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
-              <Sparkles className="w-3 h-3" /> Pareto Frontier Matrix
+            <span className="px-2.5 py-1 rounded text-xs font-semibold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+              <Crosshair className="w-3.5 h-3.5" /> Pareto Efficiency Matrix
             </span>
-            <span className="text-xs text-[#64748B] font-mono">Artificial Analysis Style</span>
+            <span className="text-xs text-[#94A3B8]">Evaluation Landscape</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-            Quality vs. Cost Efficiency Landscape
+            Quality vs Cost Efficiency Landscape
           </h2>
           <p className="text-xs text-[#94A3B8] mt-1 max-w-2xl">
-            Interactive 2D evaluation mapping <strong>Intelligence Quality Index</strong> against <strong>Blended Token Pricing</strong>. Models closest to the top-left deliver the highest ROI.
+            Interactive evaluation mapping <strong>Intelligence Benchmark Score</strong> against <strong>Blended Token Pricing</strong>. Models positioned higher and further to the left provide superior unit economics.
           </p>
         </div>
 
         {/* Filter Buttons */}
-        <div className="flex items-center gap-1.5 bg-[#080A0F] p-1 rounded-lg border border-[#1E2638] self-start md:self-auto">
+        <div className="flex items-center gap-1.5 bg-[#090B10] p-1.5 rounded-lg border border-[#1E2538] self-start md:self-auto">
           <button
             onClick={() => setSelectedFilter('all')}
-            className={`px-3 py-1.5 rounded text-xs font-mono transition-all ${
+            className={`px-3 py-1.5 rounded text-xs transition-all min-h-[36px] ${
               selectedFilter === 'all'
-                ? 'bg-[#1E2638] text-white shadow-sm font-semibold'
+                ? 'bg-[#1C2333] text-white shadow-sm font-semibold'
                 : 'text-[#94A3B8] hover:text-white'
             }`}
           >
@@ -107,19 +99,19 @@ export default function ParetoMatrixChart() {
           </button>
           <button
             onClick={() => setSelectedFilter('frontier')}
-            className={`px-3 py-1.5 rounded text-xs font-mono transition-all flex items-center gap-1 ${
+            className={`px-3 py-1.5 rounded text-xs transition-all min-h-[36px] flex items-center gap-1 ${
               selectedFilter === 'frontier'
                 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold'
                 : 'text-[#94A3B8] hover:text-emerald-400'
             }`}
           >
-            <Sparkles className="w-3 h-3 text-emerald-400" /> Pareto Value
+            <Crosshair className="w-3 h-3 text-emerald-400" /> Pareto Value
           </button>
           <button
             onClick={() => setSelectedFilter('fast')}
-            className={`px-3 py-1.5 rounded text-xs font-mono transition-all ${
+            className={`px-3 py-1.5 rounded text-xs transition-all min-h-[36px] ${
               selectedFilter === 'fast'
-                ? 'bg-[#1E2638] text-white shadow-sm font-semibold'
+                ? 'bg-[#1C2333] text-white shadow-sm font-semibold'
                 : 'text-[#94A3B8] hover:text-white'
             }`}
           >
@@ -127,9 +119,9 @@ export default function ParetoMatrixChart() {
           </button>
           <button
             onClick={() => setSelectedFilter('reasoning')}
-            className={`px-3 py-1.5 rounded text-xs font-mono transition-all ${
+            className={`px-3 py-1.5 rounded text-xs transition-all min-h-[36px] ${
               selectedFilter === 'reasoning'
-                ? 'bg-[#1E2638] text-white shadow-sm font-semibold'
+                ? 'bg-[#1C2333] text-white shadow-sm font-semibold'
                 : 'text-[#94A3B8] hover:text-white'
             }`}
           >
@@ -139,49 +131,49 @@ export default function ParetoMatrixChart() {
       </div>
 
       {/* Chart Canvas Area */}
-      <div className="relative w-full h-[400px] sm:h-[460px] mt-6 bg-[#080A0F] rounded-lg border border-[#1E2638] p-4 select-none">
+      <div className="relative w-full h-[400px] sm:h-[460px] mt-6 bg-[#090B10] rounded-lg border border-[#1E2538] p-4 select-none">
         {/* Y-axis Label */}
-        <div className="absolute left-2 top-3 text-[11px] font-mono text-[#64748B] flex items-center gap-1">
-          ↑ Quality Index (0–100)
+        <div className="absolute left-2 top-3 text-xs text-[#94A3B8] flex items-center gap-1">
+          ↑ Quality Index (0 to 100)
         </div>
 
         {/* X-axis Label */}
-        <div className="absolute right-4 bottom-2 text-[11px] font-mono text-[#64748B]">
+        <div className="absolute right-4 bottom-2 text-xs text-[#94A3B8]">
           Blended Cost ($ / 1M Tokens) →
         </div>
 
         {/* Grid lines */}
         <div className="absolute inset-x-12 inset-y-10 pointer-events-none">
           {/* Horizontal lines */}
-          <div className="absolute w-full top-0 border-b border-[#1E2638]/60 flex justify-between text-[10px] font-mono text-[#475569] -mt-2">
+          <div className="absolute w-full top-0 border-b border-[#1E2538] flex justify-between text-xs text-[#64748B] -mt-2">
             <span>Score: 100 (Frontier)</span>
           </div>
-          <div className="absolute w-full top-1/3 border-b border-[#1E2638]/40 flex justify-between text-[10px] font-mono text-[#475569] -mt-2">
-            <span>Score: 92 (Expert Coding & Analysis)</span>
+          <div className="absolute w-full top-1/3 border-b border-[#1E2538] flex justify-between text-xs text-[#64748B] -mt-2">
+            <span>Score: 92 (Coding & Multi-Step Analysis)</span>
           </div>
-          <div className="absolute w-full top-2/3 border-b border-[#1E2638]/40 flex justify-between text-[10px] font-mono text-[#475569] -mt-2">
-            <span>Score: 85 (Production Workhorse)</span>
+          <div className="absolute w-full top-2/3 border-b border-[#1E2538] flex justify-between text-xs text-[#64748B] -mt-2">
+            <span>Score: 85 (General Production Workhorse)</span>
           </div>
-          <div className="absolute w-full bottom-0 border-b border-[#1E2638]/80 flex justify-between text-[10px] font-mono text-[#475569] -mt-2">
-            <span>Score: 78 (Fast Utility)</span>
+          <div className="absolute w-full bottom-0 border-b border-[#1E2538] flex justify-between text-xs text-[#64748B] -mt-2">
+            <span>Score: 78 (Fast Classification)</span>
           </div>
 
           {/* Vertical cost brackets */}
-          <div className="absolute h-full left-[22%] border-r border-[#1E2638]/40 flex flex-col justify-end text-[9px] font-mono text-[#475569] pl-1 pb-1">
+          <div className="absolute h-full left-[22%] border-r border-[#1E2538] flex flex-col justify-end text-xs font-mono text-[#64748B] pl-1 pb-1">
             $0.50
           </div>
-          <div className="absolute h-full left-[48%] border-r border-[#1E2638]/40 flex flex-col justify-end text-[9px] font-mono text-[#475569] pl-1 pb-1">
+          <div className="absolute h-full left-[48%] border-r border-[#1E2538] flex flex-col justify-end text-xs font-mono text-[#64748B] pl-1 pb-1">
             $3.00
           </div>
-          <div className="absolute h-full left-[78%] border-r border-[#1E2638]/40 flex flex-col justify-end text-[9px] font-mono text-[#475569] pl-1 pb-1">
+          <div className="absolute h-full left-[78%] border-r border-[#1E2538] flex flex-col justify-end text-xs font-mono text-[#64748B] pl-1 pb-1">
             $10.00
           </div>
         </div>
 
-        {/* Highlight zone for top value */}
-        <div className="absolute left-12 top-10 w-44 h-48 bg-emerald-500/[0.04] border border-emerald-500/10 rounded-br-2xl pointer-events-none flex items-start p-2">
-          <span className="text-[10px] font-mono font-bold text-emerald-400/80">
-            ★ Sweet Spot: Maximum ROI
+        {/* High Efficiency Quadrant */}
+        <div className="absolute left-12 top-10 w-48 h-48 bg-emerald-500/[0.03] border border-emerald-500/20 rounded-br-2xl pointer-events-none flex items-start p-2">
+          <span className="text-xs font-semibold text-emerald-400">
+            High Efficiency Quadrant
           </span>
         </div>
 
@@ -190,11 +182,11 @@ export default function ParetoMatrixChart() {
           const { x, y } = getCoords(item.blendedCostPer1M, item.intelligenceScore);
           const isSelected = hoveredModel?.model.id === item.model.id;
 
-          let colorClass = 'bg-[#1E2638] text-[#94A3B8] border-[#334155]';
-          if (item.model.provider === 'DeepSeek') colorClass = 'bg-blue-900/50 text-blue-300 border-blue-500/50 shadow-blue-500/20';
-          else if (item.model.provider === 'Anthropic') colorClass = 'bg-amber-900/50 text-amber-300 border-amber-500/50 shadow-amber-500/20';
-          else if (item.model.provider === 'OpenAI') colorClass = 'bg-emerald-900/50 text-emerald-300 border-emerald-500/50 shadow-emerald-500/20';
-          else if (item.model.provider === 'Google') colorClass = 'bg-cyan-900/50 text-cyan-300 border-cyan-500/50 shadow-cyan-500/20';
+          let colorClass = 'bg-[#1C2333] text-[#94A3B8] border-[#2A344A]';
+          if (item.model.provider === 'DeepSeek') colorClass = 'bg-blue-950/80 text-blue-300 border-blue-500/40';
+          else if (item.model.provider === 'Anthropic') colorClass = 'bg-amber-950/80 text-amber-300 border-amber-500/40';
+          else if (item.model.provider === 'OpenAI') colorClass = 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40';
+          else if (item.model.provider === 'Google') colorClass = 'bg-cyan-950/80 text-cyan-300 border-cyan-500/40';
 
           return (
             <div
@@ -212,18 +204,15 @@ export default function ParetoMatrixChart() {
                 }`}
               >
                 <ProviderIcon provider={item.model.provider} className="w-3.5 h-3.5" />
-                {item.isParetoFrontier && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                )}
               </div>
 
               {/* Label below node */}
               <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 whitespace-nowrap pointer-events-none">
                 <span
-                  className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
+                  className={`text-xs px-1.5 py-0.5 rounded border font-medium ${
                     isSelected
                       ? 'bg-white text-black font-bold border-white'
-                      : 'bg-[#0E121B]/90 text-[#CBD5E1] border-[#1E2638] group-hover:border-emerald-500/50'
+                      : 'bg-[#111520] text-[#CBD5E1] border-[#1E2538] group-hover:border-emerald-500/50'
                   }`}
                 >
                   {item.model.name}
@@ -236,70 +225,32 @@ export default function ParetoMatrixChart() {
         {/* Tooltip Overlay */}
         {hoveredModel && (
           <div
-            className="absolute bottom-4 left-4 z-30 p-3.5 bg-[#0E121B] border border-emerald-500/40 rounded-xl shadow-2xl backdrop-blur-md max-w-xs animate-in fade-in zoom-in-95 duration-150"
+            className="absolute bottom-4 left-4 z-30 p-3.5 bg-[#111520] border border-emerald-500/40 rounded-xl shadow-2xl max-w-xs"
           >
-            <div className="flex items-center justify-between gap-2 border-b border-[#1E2638] pb-2 mb-2">
+            <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#1E2538]">
               <div className="flex items-center gap-2">
-                <ProviderIcon provider={hoveredModel.model.provider} className="w-4 h-4 text-emerald-400" />
-                <span className="font-bold text-white text-sm">{hoveredModel.model.name}</span>
+                <ProviderIcon provider={hoveredModel.model.provider} className="w-4 h-4" />
+                <span className="text-xs font-bold text-white">{hoveredModel.model.name}</span>
               </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 bg-[#1E2638] text-white rounded">
-                Score: {hoveredModel.intelligenceScore}/100
-              </span>
+              <span className="text-xs text-[#94A3B8]">{hoveredModel.model.provider}</span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-              <div>
-                <span className="text-[#64748B] block">Input Token:</span>
-                <span className="text-white font-medium">${hoveredModel.model.inputCostPer1M.toFixed(2)}/1M</span>
+            <div className="mt-2 space-y-1.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-[#94A3B8]">Quality Index:</span>
+                <span className="text-emerald-400 font-bold font-mono">{hoveredModel.intelligenceScore} / 100</span>
               </div>
-              <div>
-                <span className="text-[#64748B] block">Output Token:</span>
-                <span className="text-white font-medium">${hoveredModel.model.outputCostPer1M.toFixed(2)}/1M</span>
+              <div className="flex justify-between">
+                <span className="text-[#94A3B8]">Blended Cost (3:1):</span>
+                <span className="text-white font-bold font-mono">${hoveredModel.blendedCostPer1M.toFixed(3)} / 1M</span>
               </div>
-              <div>
-                <span className="text-[#64748B] block">Prompt Cache:</span>
-                <span className="text-emerald-400 font-medium">
-                  {hoveredModel.model.cachedInputCostPer1M ? `$${hoveredModel.model.cachedInputCostPer1M.toFixed(2)}/1M` : 'No Cache'}
-                </span>
-              </div>
-              <div>
-                <span className="text-[#64748B] block">Context Window:</span>
-                <span className="text-white font-medium">{(hoveredModel.model.contextWindow / 1000).toLocaleString()}k tok</span>
+              <div className="flex justify-between text-xs text-[#94A3B8] pt-1 border-t border-[#1E2538] font-mono">
+                <span>In: ${hoveredModel.model.inputCostPer1M}</span>
+                <span>Out: ${hoveredModel.model.outputCostPer1M}</span>
               </div>
             </div>
-
-            {hoveredModel.isParetoFrontier && (
-              <div className="mt-2.5 pt-2 border-t border-[#1E2638] text-[10px] text-emerald-400 flex items-center gap-1 font-mono">
-                <Sparkles className="w-3 h-3" /> Pareto Frontier: Optimal Value Leader
-              </div>
-            )}
           </div>
         )}
-      </div>
-
-      {/* Legend Footer */}
-      <div className="mt-4 pt-4 border-t border-[#1E2638] flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-[#94A3B8]">
-        <div className="flex items-center gap-4 flex-wrap">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" /> OpenAI
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-400" /> Anthropic
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-400" /> DeepSeek
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" /> Google
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-purple-400" /> Meta / Mistral
-          </span>
-        </div>
-        <div className="text-[11px] text-[#64748B]">
-          Data updated September 2026 · Source: LMSYS, Artificial Analysis, Vendor Pricing API
-        </div>
       </div>
     </section>
   );

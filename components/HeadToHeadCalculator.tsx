@@ -9,7 +9,8 @@ import {
   formatUSD,
   formatContextWindow,
 } from '@/lib/calculator';
-import { GitCompare, ArrowRight, CheckCircle2, XCircle, Zap, Shield, Sparkles } from 'lucide-react';
+import { ProviderIcon } from './ProviderLogos';
+import { GitCompare, Zap } from 'lucide-react';
 
 interface HeadToHeadCalculatorProps {
   initialModelA?: string;
@@ -54,9 +55,8 @@ export default function HeadToHeadCalculator({
 
   const diffCost = Math.abs(costA.totalMonthlyCost - costB.totalMonthlyCost);
   const cheaperModel = costA.totalMonthlyCost < costB.totalMonthlyCost ? modelA : modelB;
-  const expensiveModel = costA.totalMonthlyCost < costB.totalMonthlyCost ? modelB : modelA;
   const ratio =
-    expensiveModel && cheaperModel && costA.totalMonthlyCost > 0 && costB.totalMonthlyCost > 0
+    costA.totalMonthlyCost > 0 && costB.totalMonthlyCost > 0
       ? (
           Math.max(costA.totalMonthlyCost, costB.totalMonthlyCost) /
           Math.min(costA.totalMonthlyCost, costB.totalMonthlyCost)
@@ -64,24 +64,24 @@ export default function HeadToHeadCalculator({
       : '1.0';
 
   return (
-    <section id="head-to-head" className="w-full py-10 border-t border-[#1E2638] bg-[#0A0D14]">
+    <section id="head-to-head" className="w-full py-10 border-t border-[#1E2538] bg-[#090B10]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         
         {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-[#1E2638]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-[#1E2538]">
           <div>
-            <div className="flex items-center gap-2 font-mono text-xs text-blue-400 font-semibold uppercase tracking-wider">
+            <div className="flex items-center gap-2 text-xs text-blue-400 font-semibold uppercase tracking-wider">
               <GitCompare className="w-4 h-4" />
-              Head-to-Head Model Diff
+              Direct Model Comparison
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold font-mono text-white mt-1">
-              Side-by-Side Cost & Benchmark Delta
+            <h2 className="text-xl sm:text-2xl font-bold text-white mt-1">
+              Side-by-Side Cost Differential
             </h2>
           </div>
 
           {/* Quick Switch Pairs */}
-          <div className="flex items-center gap-2 overflow-x-auto text-[11px] font-mono">
-            <span className="text-[#64748B]">Popular:</span>
+          <div className="flex items-center gap-2 overflow-x-auto text-xs">
+            <span className="text-[#94A3B8]">Quick Compare:</span>
             {[
               { a: 'gpt-4o', b: 'claude-3-5-sonnet', label: 'GPT-4o vs Claude 3.5' },
               { a: 'deepseek-v3', b: 'gpt-4o', label: 'DeepSeek V3 vs GPT-4o' },
@@ -93,7 +93,7 @@ export default function HeadToHeadCalculator({
                   setModelAId(pair.a);
                   setModelBId(pair.b);
                 }}
-                className="px-2.5 py-1 rounded bg-[#141A26] hover:bg-[#1E2638] text-[#94A3B8] hover:text-white border border-[#232D42] transition-colors whitespace-nowrap"
+                className="px-2.5 py-1.5 rounded bg-[#111520] hover:bg-[#1C2333] text-[#CBD5E1] hover:text-white border border-[#1E2538] transition-colors whitespace-nowrap min-h-[36px]"
               >
                 {pair.label}
               </button>
@@ -102,7 +102,7 @@ export default function HeadToHeadCalculator({
         </div>
 
         {/* Delta Callout Banner */}
-        <div className="mb-6 p-4 rounded-xl bg-[#141A26] border border-[#232D42] flex flex-col md:flex-row md:items-center justify-between gap-4 font-mono">
+        <div className="mb-6 p-4 rounded-xl surface-card flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
               <Zap className="w-5 h-5" />
@@ -110,7 +110,7 @@ export default function HeadToHeadCalculator({
             <div>
               <div className="text-sm font-bold text-white">
                 <span className="text-emerald-400">{cheaperModel.name}</span> saves{' '}
-                <span className="text-emerald-400">{formatUSD(diffCost)}/month</span> ({ratio}x cheaper)
+                <span className="text-emerald-400 font-mono">{formatUSD(diffCost)}/month</span> ({ratio}x difference)
               </div>
               <div className="text-xs text-[#94A3B8] mt-0.5">
                 Simulated on {formatUSD(requests).replace('$', '')} requests/mo with {cachingRate}% prompt caching.
@@ -118,10 +118,10 @@ export default function HeadToHeadCalculator({
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-4 text-xs font-mono">
             <div className="text-right">
-              <div className="text-[#64748B]">Annual Difference</div>
-              <div className="text-emerald-400 font-bold">{formatUSD(diffCost * 12)}</div>
+              <div className="text-[#94A3B8]">Annual Difference</div>
+              <div className="text-emerald-400 font-bold text-sm">{formatUSD(diffCost * 12)}</div>
             </div>
           </div>
         </div>
@@ -130,27 +130,29 @@ export default function HeadToHeadCalculator({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           {/* Model A Card */}
-          <div className="terminal-card rounded-xl p-5 border border-[#1E2638]">
+          <div className="surface-card rounded-xl p-5">
             <div className="mb-4">
-              <label className="text-[10px] uppercase font-mono tracking-wider text-[#64748B] block mb-1">
+              <label className="text-xs uppercase font-medium text-[#94A3B8] block mb-1.5">
                 Select Model A
               </label>
-              <select
-                value={modelAId}
-                onChange={(e) => setModelAId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-[#141A26] border border-[#232D42] font-mono text-sm text-white focus:outline-none focus:border-[#10B981]"
-              >
-                {AI_MODELS.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.provider})
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={modelAId}
+                  onChange={(e) => setModelAId(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg bg-[#090B10] border border-[#1E2538] text-xs font-medium text-white focus:outline-none focus:border-emerald-500 min-h-[44px]"
+                >
+                  {AI_MODELS.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} ({m.provider})
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            {/* Model A Price Summary */}
-            <div className="p-4 rounded-lg bg-[#080A0F] border border-[#1E2638] mb-4">
-              <div className="text-[11px] font-mono text-[#64748B]">Projected Monthly Spend</div>
+            {/* Price Summary */}
+            <div className="p-4 rounded-lg bg-[#090B10] border border-[#1E2538] mb-4">
+              <div className="text-xs text-[#94A3B8]">Projected Monthly Spend</div>
               <div className="text-2xl font-bold font-mono text-white mt-1">
                 {formatUSD(costA.totalMonthlyCost)}
               </div>
@@ -160,60 +162,65 @@ export default function HeadToHeadCalculator({
             </div>
 
             {/* Specs Table */}
-            <div className="space-y-2 text-xs font-mono">
-              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
-                <span className="text-[#64748B]">Provider</span>
-                <span className="text-white font-medium">{modelA.provider}</span>
-              </div>
-              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
-                <span className="text-[#64748B]">Context Window</span>
-                <span className="text-white font-medium">{formatContextWindow(modelA.contextWindow)}</span>
-              </div>
-              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
-                <span className="text-[#64748B]">Input Pricing</span>
-                <span className="text-white font-medium">${modelA.inputCostPer1M.toFixed(2)} / 1M</span>
-              </div>
-              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
-                <span className="text-[#64748B]">Cached Input Rate</span>
-                <span className="text-emerald-400 font-medium">
-                  {(modelA.cachedInputCostPer1M ?? 0) > 0
-                    ? `$${modelA.cachedInputCostPer1M!.toFixed(2)} / 1M`
-                    : 'N/A'}
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between py-1.5 border-b border-[#1E2538]">
+                <span className="text-[#94A3B8]">Provider</span>
+                <span className="text-white font-medium flex items-center gap-1.5">
+                  <ProviderIcon provider={modelA.provider} className="w-3.5 h-3.5" />
+                  {modelA.provider}
                 </span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
-                <span className="text-[#64748B]">Output Pricing</span>
-                <span className="text-white font-medium">${modelA.outputCostPer1M.toFixed(2)} / 1M</span>
+              <div className="flex justify-between py-1.5 border-b border-[#1E2538]">
+                <span className="text-[#94A3B8]">Context Window</span>
+                <span className="text-white font-mono">{formatContextWindow(modelA.contextWindow)}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[#1E2538]">
+                <span className="text-[#94A3B8]">Input Pricing</span>
+                <span className="text-white font-mono">${modelA.inputCostPer1M.toFixed(2)} / 1M</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[#1E2538]">
+                <span className="text-[#94A3B8]">Cached Input Rate</span>
+                <span className="text-emerald-400 font-mono">
+                  {(modelA.cachedInputCostPer1M ?? 0) > 0
+                    ? `$${modelA.cachedInputCostPer1M!.toFixed(2)} / 1M`
+                    : 'Not supported'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[#1E2538]">
+                <span className="text-[#94A3B8]">Output Pricing</span>
+                <span className="text-white font-mono">${modelA.outputCostPer1M.toFixed(2)} / 1M</span>
               </div>
               <div className="flex justify-between py-1.5">
-                <span className="text-[#64748B]">Latency / Speed</span>
-                <span className="text-white font-medium">{modelA.speedTokensPerSec || 80} tok/sec</span>
+                <span className="text-[#94A3B8]">Throughput Rate</span>
+                <span className="text-white font-mono">{modelA.speedTokensPerSec || 80} tok/sec</span>
               </div>
             </div>
           </div>
 
           {/* Model B Card */}
-          <div className="terminal-card rounded-xl p-5 border border-[#1E2638]">
+          <div className="surface-card rounded-xl p-5">
             <div className="mb-4">
-              <label className="text-[10px] uppercase font-mono tracking-wider text-[#64748B] block mb-1">
+              <label className="text-xs uppercase font-medium text-[#94A3B8] block mb-1.5">
                 Select Model B
               </label>
-              <select
-                value={modelBId}
-                onChange={(e) => setModelBId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-[#141A26] border border-[#232D42] font-mono text-sm text-white focus:outline-none focus:border-[#10B981]"
-              >
-                {AI_MODELS.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.provider})
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={modelBId}
+                  onChange={(e) => setModelBId(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg bg-[#090B10] border border-[#1E2538] text-xs font-medium text-white focus:outline-none focus:border-emerald-500 min-h-[44px]"
+                >
+                  {AI_MODELS.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} ({m.provider})
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            {/* Model B Price Summary */}
-            <div className="p-4 rounded-lg bg-[#080A0F] border border-[#1E2638] mb-4">
-              <div className="text-[11px] font-mono text-[#64748B]">Projected Monthly Spend</div>
+            {/* Price Summary */}
+            <div className="p-4 rounded-lg bg-[#090B10] border border-[#1E2538] mb-4">
+              <div className="text-xs text-[#94A3B8]">Projected Monthly Spend</div>
               <div className="text-2xl font-bold font-mono text-white mt-1">
                 {formatUSD(costB.totalMonthlyCost)}
               </div>
@@ -223,34 +230,37 @@ export default function HeadToHeadCalculator({
             </div>
 
             {/* Specs Table */}
-            <div className="space-y-2 text-xs font-mono">
-              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
-                <span className="text-[#64748B]">Provider</span>
-                <span className="text-white font-medium">{modelB.provider}</span>
-              </div>
-              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
-                <span className="text-[#64748B]">Context Window</span>
-                <span className="text-white font-medium">{formatContextWindow(modelB.contextWindow)}</span>
-              </div>
-              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
-                <span className="text-[#64748B]">Input Pricing</span>
-                <span className="text-white font-medium">${modelB.inputCostPer1M.toFixed(2)} / 1M</span>
-              </div>
-              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
-                <span className="text-[#64748B]">Cached Input Rate</span>
-                <span className="text-emerald-400 font-medium">
-                  {(modelB.cachedInputCostPer1M ?? 0) > 0
-                    ? `$${modelB.cachedInputCostPer1M!.toFixed(2)} / 1M`
-                    : 'N/A'}
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between py-1.5 border-b border-[#1E2538]">
+                <span className="text-[#94A3B8]">Provider</span>
+                <span className="text-white font-medium flex items-center gap-1.5">
+                  <ProviderIcon provider={modelB.provider} className="w-3.5 h-3.5" />
+                  {modelB.provider}
                 </span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-[#1E2638]/50">
-                <span className="text-[#64748B]">Output Pricing</span>
-                <span className="text-white font-medium">${modelB.outputCostPer1M.toFixed(2)} / 1M</span>
+              <div className="flex justify-between py-1.5 border-b border-[#1E2538]">
+                <span className="text-[#94A3B8]">Context Window</span>
+                <span className="text-white font-mono">{formatContextWindow(modelB.contextWindow)}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[#1E2538]">
+                <span className="text-[#94A3B8]">Input Pricing</span>
+                <span className="text-white font-mono">${modelB.inputCostPer1M.toFixed(2)} / 1M</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[#1E2538]">
+                <span className="text-[#94A3B8]">Cached Input Rate</span>
+                <span className="text-emerald-400 font-mono">
+                  {(modelB.cachedInputCostPer1M ?? 0) > 0
+                    ? `$${modelB.cachedInputCostPer1M!.toFixed(2)} / 1M`
+                    : 'Not supported'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[#1E2538]">
+                <span className="text-[#94A3B8]">Output Pricing</span>
+                <span className="text-white font-mono">${modelB.outputCostPer1M.toFixed(2)} / 1M</span>
               </div>
               <div className="flex justify-between py-1.5">
-                <span className="text-[#64748B]">Latency / Speed</span>
-                <span className="text-white font-medium">{modelB.speedTokensPerSec || 80} tok/sec</span>
+                <span className="text-[#94A3B8]">Throughput Rate</span>
+                <span className="text-white font-mono">{modelB.speedTokensPerSec || 80} tok/sec</span>
               </div>
             </div>
           </div>

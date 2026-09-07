@@ -1,76 +1,89 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
+import { HelpCircle, ChevronDown } from 'lucide-react';
+
+interface FaqItem {
+  q: string;
+  a: string;
+}
+
+const FAQ_ITEMS: FaqItem[] = [
+  {
+    q: 'How accurate is the prompt caching calculation?',
+    a: 'Calculations use exact published cache read rates: Anthropic charges 10% of base input rate ($0.30 vs $3.00/1M on Sonnet 3.5), OpenAI charges 50% ($1.25 vs $2.50/1M on GPT-4o), and DeepSeek charges 10% ($0.014 vs $0.14/1M on DeepSeek V3). Cache write premiums for Anthropic (5-minute TTL) are factored into blended calculations.',
+  },
+  {
+    q: 'What is the standard ratio between input and output tokens?',
+    a: 'For conversational support and agentic workflows, empirical benchmarks show an average ratio of 4:1 to 5:1 (input to output). For summarization or extraction, ratios often exceed 10:1. For code generation and creative drafting, the ratio drops closer to 2:1.',
+  },
+  {
+    q: 'When should an engineering team switch from Managed APIs to self-hosted GPUs?',
+    a: 'Breakeven depends heavily on model size. For 70B parameter models like Llama 3.3 70B or DeepSeek R1 distilled, a dedicated H100 SXM node ($2.49/hr) breaks even at approximately 350M to 450M tokens per month at 50% sustained utilization.',
+  },
+  {
+    q: 'Are batch processing discounts available across all models?',
+    a: 'OpenAI, Anthropic, and Google support Batch endpoints with a 50% flat discount on input and output tokens. Turnaround SLAs are 24 hours, making batch ideal for synthetic data generation, periodic classification, and testing evaluation runs.',
+  },
+  {
+    q: 'How frequently are provider prices updated on APICostHub?',
+    a: 'Price tables and model metadata are verified and updated within 24 hours of official pricing announcements from OpenAI, Anthropic, Google Cloud, DeepSeek, and Meta.',
+  },
+];
 
 export default function FaqSection() {
-  const faqs = [
-    {
-      question: 'Why are output tokens more expensive than input tokens in LLMs?',
-      answer:
-        'Input tokens can be processed in parallel across GPU tensor cores via matrix multiplication (prefill phase). In contrast, output tokens must be generated sequentially one by one (auto-regressive decoding phase). Each output token requires a full forward pass and memory read of the entire KV cache, causing memory bandwidth bottlenecks and higher compute consumption.',
-    },
-    {
-      question: 'How does prompt caching reduce AI API bills?',
-      answer:
-        'Prompt caching stores the computed Key-Value (KV) states of static prompt prefixes (like developer system instructions, API documentation, or reference manuals) in high-speed GPU memory. When subsequent requests share that exact prefix, the provider skips computing those tokens, offering discounts of 50% to 90% (e.g. Claude 3.5 Sonnet charges $0.30/1M cached tokens instead of $3.00/1M).',
-    },
-    {
-      question: 'When should a startup switch from Managed API to self-hosted open-weights models?',
-      answer:
-        'Self-hosting becomes economically viable when monthly API token expenses exceed the cost of dedicated cloud GPU instances (typically starting around $700–$1,500/month per instance) AND when traffic volume maintains high GPU utilization (>50%). For variable or low-volume workloads, managed pay-as-you-go APIs are almost always cheaper due to zero idle costs.',
-    },
-    {
-      question: 'How accurate is this API cost calculator?',
-      answer:
-        'All token pricing data is verified directly from official provider pricing documentation (OpenAI, Anthropic, Google Cloud Vertex AI, DeepSeek, and Together AI). Pricing reflects published rates as of September 2026.',
-    },
-  ];
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
-  // Schema.org FAQPage JSON-LD
-  const faqSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqs.map((f) => ({
-      '@type': 'Question',
-      name: f.question,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: f.answer,
-      },
-    })),
+  const toggle = (idx: number) => {
+    setOpenIndex(openIndex === idx ? null : idx);
   };
 
   return (
-    <section className="w-full py-12 border-t border-border">
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-        {/* Inject FAQ Schema for SEO */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-        />
-
-        <div className="text-center mb-10">
-          <h2 className="text-2xl font-bold text-text-primary tracking-tight">
-            Frequently Asked Questions
+    <section id="faq" className="w-full py-12 border-t border-[#1E2538] bg-[#090B10]">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        
+        {/* Section Header */}
+        <div className="mb-8 pb-4 border-b border-[#1E2538]">
+          <div className="flex items-center gap-2 text-xs text-[#94A3B8] font-semibold uppercase tracking-wider mb-1">
+            <HelpCircle className="w-4 h-4 text-emerald-400" />
+            <span>Frequently Asked Questions</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            LLM API Economics and Infrastructure Guidance
           </h2>
-          <p className="mt-2 text-sm text-text-secondary">
-            Everything you need to know about AI inference pricing and cost engineering.
-          </p>
         </div>
 
-        <div className="space-y-4">
-          {faqs.map((faq, idx) => (
-            <div
-              key={idx}
-              className="rounded-xl border border-border bg-surface p-5 transition-colors"
-            >
-              <h3 className="text-sm sm:text-base font-semibold text-text-primary mb-2">
-                {faq.question}
-              </h3>
-              <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
-                {faq.answer}
-              </p>
-            </div>
-          ))}
+        {/* Interactive Accordion List */}
+        <div className="space-y-3">
+          {FAQ_ITEMS.map((item, idx) => {
+            const isOpen = openIndex === idx;
+            return (
+              <div
+                key={item.q}
+                className="surface-card rounded-xl border border-[#1E2538] overflow-hidden transition-colors"
+              >
+                <button
+                  onClick={() => toggle(idx)}
+                  className="w-full px-5 py-4 text-left flex items-center justify-between gap-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 min-h-[44px]"
+                  aria-expanded={isOpen}
+                >
+                  <span className="text-sm font-semibold text-white">{item.q}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-[#94A3B8] shrink-0 transition-transform duration-200 ${
+                      isOpen ? 'rotate-180 text-emerald-400' : ''
+                    }`}
+                  />
+                </button>
+                {isOpen && (
+                  <div className="px-5 pb-4 pt-1 text-xs text-[#94A3B8] leading-relaxed border-t border-[#1E2538]/60">
+                    {item.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
+
       </div>
     </section>
   );
