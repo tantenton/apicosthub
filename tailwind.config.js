@@ -1,6 +1,5 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: ['class'],
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -9,32 +8,32 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: '#0B0D13',
+        background: '#f8fafc',
         surface: {
-          DEFAULT: '#121620',
-          hover: '#181E2C',
-          active: '#1E2537',
-          subtle: '#0F121A',
+          DEFAULT: '#ffffff',
+          hover: '#f8fafc',
+          active: '#f1f5f9',
+          subtle: '#f1f5f9',
         },
         border: {
-          DEFAULT: '#1E2536',
-          light: '#2B344B',
+          DEFAULT: '#e2e8f0',
+          light: '#cbd5e1',
         },
         brand: {
-          DEFAULT: '#3B82F6',
-          hover: '#2563EB',
-          subtle: 'rgba(59, 130, 246, 0.1)',
+          DEFAULT: '#4f46e5',
+          hover: '#4338ca',
+          subtle: 'rgba(79, 70, 229, 0.08)',
         },
         accent: {
-          emerald: '#10B981',
-          emeraldSubtle: 'rgba(16, 185, 129, 0.1)',
-          amber: '#F59E0B',
-          amberSubtle: 'rgba(245, 158, 11, 0.1)',
+          emerald: '#059669',
+          emeraldSubtle: 'rgba(5, 150, 105, 0.08)',
+          amber: '#d97706',
+          amberSubtle: 'rgba(217, 119, 6, 0.08)',
         },
         text: {
-          primary: '#F1F5F9',
-          secondary: '#94A3B8',
-          muted: '#64748B',
+          primary: '#0f172a',
+          secondary: '#475569',
+          muted: '#94a3b8',
         }
       },
       fontFamily: {

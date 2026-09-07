@@ -72,7 +72,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className="min-h-screen bg-background text-text-primary antialiased flex flex-col justify-between">
+      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased flex flex-col justify-between">
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />
