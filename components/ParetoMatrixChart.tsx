@@ -11,22 +11,23 @@ export default function ParetoMatrixChart() {
   // Quality score estimation (MMLU-Pro / Arena ELO proxy)
   const getQualityScore = (model: AIModel): number => {
     switch (model.id) {
-      case 'claude-sonnet-4-6': return 99;
-      case 'claude-3-7-sonnet': return 98;
+      case 'gpt-6-astra': return 100;
+      case 'claude-fable-5-1': return 100;
+      case 'claude-opus-5': return 99;
+      case 'claude-sonnet-5': return 98;
       case 'gemini-3-1-pro': return 97;
-      case 'gemini-3-8-flash': return 95;
-      case 'o1': return 96;
-      case 'grok-4-5': return 95;
-      case 'deepseek-r1': return 94;
-      case 'o3-mini': return 92;
-      case 'gpt-4-1': return 93;
-      case 'deepseek-v3-2': return 91;
-      case 'grok-4-20': return 90;
+      case 'deepseek-v4-pro': return 96;
+      case 'grok-4-6': return 95;
+      case 'gemini-3-8-flash': return 94;
+      case 'gpt-5-6-terra-pro': return 93;
+      case 'mistral-medium-3-5': return 91;
+      case 'llama-4-maverick': return 90;
+      case 'grok-4-20': return 89;
+      case 'devstral-2': return 88;
       case 'gemini-3-5-flash-lite': return 87;
-      case 'claude-3-5-haiku': return 84;
-      case 'gpt-4-1-mini': return 85;
-      case 'llama-3-3-70b': return 86;
-      case 'codestral': return 85;
+      case 'gpt-5-6-luna': return 86;
+      case 'llama-4-scout': return 85;
+      case 'deepseek-v4-flash': return 84;
       default: return 75;
     }
   };
@@ -112,7 +113,7 @@ export default function ParetoMatrixChart() {
               // Normalized Y (linear for score 75 to 100)
               const topPercent = Math.min(92, Math.max(8, 100 - ((score - minScore) / (maxScore - minScore)) * 100));
 
-              const isSweetSpot = model.id === 'deepseek-v3-2' || model.id === 'gemini-2-5-flash-lite' || model.id === 'deepseek-r1';
+              const isSweetSpot = model.id === 'deepseek-v4-flash' || model.id === 'llama-4-maverick' || model.id === 'gemini-3-8-flash';
 
               return (
                 <div
