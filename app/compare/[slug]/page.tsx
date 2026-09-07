@@ -1,7 +1,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
-import { POPULAR_COMPARISONS, AI_MODELS } from '@/data/models';
+import { POPULAR_COMPARISONS, AI_MODELS, AIModel, ModelComparisonPair } from '@/data/models';
 import HeadToHeadCalculator from '@/components/HeadToHeadCalculator';
 import AdPlacement from '@/components/AdPlacement';
 import { getProviderLogo } from '@/components/ProviderLogos';
@@ -15,6 +15,59 @@ interface ComparePageProps {
   };
 }
 
+export const dynamicParams = true;
+
+function findModel(idOrSlug: string): AIModel | undefined {
+  const clean = idOrSlug.toLowerCase().trim();
+  return AI_MODELS.find(
+    (m) =>
+      m.id.toLowerCase() === clean ||
+      m.slug.toLowerCase() === clean ||
+      m.id.replace(/-/g, '') === clean.replace(/-/g, '')
+  );
+}
+
+function resolveComparison(slug: string): {
+  comparison: ModelComparisonPair;
+  modelA: AIModel;
+  modelB: AIModel;
+} | null {
+  // 1. Check popular comparisons
+  const existing = POPULAR_COMPARISONS.find((c) => c.slug.toLowerCase() === slug.toLowerCase());
+  if (existing) {
+    const modelA = findModel(existing.modelAId);
+    const modelB = findModel(existing.modelBId);
+    if (modelA && modelB) {
+      return { comparison: existing, modelA, modelB };
+    }
+  }
+
+  // 2. Dynamic slug resolution: e.g. claude-3-5-sonnet-vs-deepseek-v3
+  if (slug.includes('-vs-')) {
+    const [partA, partB] = slug.split('-vs-');
+    if (partA && partB) {
+      const modelA = findModel(partA);
+      const modelB = findModel(partB);
+      if (modelA && modelB) {
+        return {
+          comparison: {
+            slug,
+            modelAId: modelA.id,
+            modelBId: modelB.id,
+            title: `${modelA.name} vs ${modelB.name}`,
+            focusAngle: `Direct Unit Economics Showdown: ${modelA.name} against ${modelB.name}`,
+            subtitle: `Compare pricing, context window, throughput, and prompt caching discounts between ${modelA.name} and ${modelB.name}.`,
+          },
+          modelA,
+          modelB,
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
 export async function generateStaticParams() {
   return POPULAR_COMPARISONS.map((comp) => ({
     slug: comp.slug,
@@ -22,16 +75,18 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: ComparePageProps): Promise<Metadata> {
-  const comparison = POPULAR_COMPARISONS.find((c) => c.slug === params.slug);
-  if (!comparison) {
+  const resolved = resolveComparison(params.slug);
+  if (!resolved) {
     return {
       title: 'Model Comparison | APICostHub',
     };
   }
 
+  const { comparison, modelA, modelB } = resolved;
+
   return {
     title: `${comparison.title}: Real-Time API Cost Calculator 2026`,
-    description: comparison.subtitle,
+    description: comparison.subtitle || `Unit economics benchmark between ${modelA.name} and ${modelB.name}.`,
     openGraph: {
       title: `${comparison.title} | APICostHub`,
       description: comparison.subtitle,
@@ -41,17 +96,19 @@ export async function generateMetadata({ params }: ComparePageProps): Promise<Me
 }
 
 export default function ComparePage({ params }: ComparePageProps) {
-  const comparison = POPULAR_COMPARISONS.find((c) => c.slug === params.slug);
-  if (!comparison) {
+  const resolved = resolveComparison(params.slug);
+  if (!resolved) {
     notFound();
   }
 
-  const modelA = AI_MODELS.find((m) => m.id === comparison.modelAId);
-  const modelB = AI_MODELS.find((m) => m.id === comparison.modelBId);
+  const { comparison, modelA, modelB } = resolved;
 
-  if (!modelA || !modelB) {
-    notFound();
-  }
+  const costDelta = Math.abs(modelA.inputPricePerMillion - modelB.inputPricePerMillion);
+  const cheaperModel = modelA.inputPricePerMillion < modelB.inputPricePerMillion ? modelA : modelB;
+  const pricierModel = modelA.inputPricePerMillion < modelB.inputPricePerMillion ? modelB : modelA;
+  const savingsPct = pricierModel.inputPricePerMillion > 0
+    ? Math.round(((pricierModel.inputPricePerMillion - cheaperModel.inputPricePerMillion) / pricierModel.inputPricePerMillion) * 100)
+    : 0;
 
   return (
     <div className="w-full min-h-screen bg-slate-50 text-slate-900">
@@ -68,110 +125,154 @@ export default function ComparePage({ params }: ComparePageProps) {
         <div className="mb-8 pb-6 border-b border-slate-200">
           <div className="flex items-center gap-3 text-xs text-indigo-600 font-bold uppercase tracking-wider mb-3">
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 border border-indigo-200">
-              <span>{modelA.name}</span>
+              <Zap className="w-3.5 h-3.5 text-indigo-600" />
+              Verified Head to Head Benchmark
             </div>
-            <span className="text-slate-400">vs</span>
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 border border-indigo-200">
-              <span>{modelB.name}</span>
-            </div>
+            <span className="text-slate-400">·</span>
+            <span className="text-slate-500 font-mono">2026 Production Tier</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
+
+          <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
             {comparison.title}
           </h1>
-          <p className="text-sm text-slate-600 mt-2 max-w-3xl leading-relaxed">
-            {comparison.subtitle}
+          <p className="text-base sm:text-lg text-slate-600 max-w-3xl leading-relaxed">
+            {comparison.subtitle || comparison.focusAngle}
           </p>
         </div>
 
-        {/* Interactive Comparison Simulator */}
-        <div className="my-8">
-          <HeadToHeadCalculator />
-        </div>
-
-        {/* Deep Analysis & Recommendation */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-10">
-          <div className="surface-card rounded-2xl p-6 md:col-span-2 space-y-4 shadow-sm border border-slate-200">
-            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Zap className="w-4 h-4 text-indigo-600" />
-              Engineering Verdict and Architecture Guidance
-            </h2>
-            <div className="text-xs text-slate-600 space-y-3 leading-relaxed">
-              <p>
-                When building production workloads, choosing between <strong>{modelA.name}</strong> and{' '}
-                <strong>{modelB.name}</strong> depends heavily on your token volume distribution and latency budgets.
-              </p>
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
-                <div className="font-bold text-slate-900 text-xs">Cost Factor Summary:</div>
-                <ul className="list-disc list-inside space-y-1 text-slate-600">
-                  <li>
-                    <strong>Input Tokens:</strong> {modelA.name} costs <span className="font-mono text-slate-900 font-bold">${modelA.inputPricePerMillion}/1M</span> vs{' '}
-                    {modelB.name} at <span className="font-mono text-slate-900 font-bold">${modelB.inputPricePerMillion}/1M</span>.
-                  </li>
-                  <li>
-                    <strong>Output Tokens:</strong> {modelA.name} costs <span className="font-mono text-slate-900 font-bold">${modelA.outputPricePerMillion}/1M</span> vs{' '}
-                    {modelB.name} at <span className="font-mono text-slate-900 font-bold">${modelB.outputPricePerMillion}/1M</span>.
-                  </li>
-                  <li>
-                    <strong>Prompt Caching:</strong>{' '}
-                    {modelA.cachedInputPricePerMillion
-                      ? `${modelA.name} supports caching at $${modelA.cachedInputPricePerMillion}/1M.`
-                      : `${modelA.name} does not offer native prompt caching.`}
-                  </li>
-                </ul>
-              </div>
+        {/* Executive Quick Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-sm">
+            <div className="text-xs font-mono uppercase text-slate-500 mb-1">Input Arbitrage</div>
+            <div className="text-2xl font-mono font-bold text-emerald-600">
+              {savingsPct > 0 ? `${savingsPct}% Cheaper` : 'Parity'}
+            </div>
+            <div className="text-xs text-slate-500 mt-1">
+              {cheaperModel.name} saves ${costDelta.toFixed(2)} per 1M input tokens
             </div>
           </div>
 
-          <div className="surface-card rounded-2xl p-6 space-y-4 shadow-sm border border-slate-200">
-            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Shield className="w-4 h-4 text-indigo-600" />
-              Quick Specs Comparison
-            </h2>
-            <div className="space-y-3 text-xs">
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                <div className="text-slate-500 text-xs uppercase font-medium">Context Window</div>
-                <div className="text-slate-900 font-bold font-mono mt-0.5">
-                  {formatTokens(modelA.contextWindow)} vs {formatTokens(modelB.contextWindow)}
-                </div>
-              </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                <div className="text-slate-500 text-xs uppercase font-medium">Throughput Speed</div>
-                <div className="text-slate-900 font-bold font-mono mt-0.5">
-                  {modelA.typicalSpeedTokensPerSec} tok/s vs {modelB.typicalSpeedTokensPerSec} tok/s
-                </div>
-              </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                <div className="text-slate-500 text-xs uppercase font-medium">Weights Visibility</div>
-                <div className="text-slate-900 font-bold mt-0.5">
-                  {modelA.isOpenWeights ? 'Open Weights' : 'Proprietary API'} vs{' '}
-                  {modelB.isOpenWeights ? 'Open Weights' : 'Proprietary API'}
-                </div>
-              </div>
+          <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-sm">
+            <div className="text-xs font-mono uppercase text-slate-500 mb-1">Context Window</div>
+            <div className="text-2xl font-mono font-bold text-slate-900">
+              {formatTokens(modelA.contextWindow)} vs {formatTokens(modelB.contextWindow)}
+            </div>
+            <div className="text-xs text-slate-500 mt-1">
+              {modelA.contextWindow > modelB.contextWindow ? `${modelA.name} has larger memory` : `${modelB.name} has larger memory`}
+            </div>
+          </div>
+
+          <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-sm">
+            <div className="text-xs font-mono uppercase text-slate-500 mb-1">Caching Efficiency</div>
+            <div className="text-2xl font-mono font-bold text-indigo-600">
+              {modelA.cachedInputPricePerMillion ? 'Supported' : 'Standard'} vs {modelB.cachedInputPricePerMillion ? 'Supported' : 'Standard'}
+            </div>
+            <div className="text-xs text-slate-500 mt-1">
+              Prompt caching cuts repeatable latency and budget
             </div>
           </div>
         </div>
 
-        {/* Other Comparisons Grid */}
-        <div className="pt-8 border-t border-slate-200">
-          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">
-            Explore Other Head-to-Head Comparisons
-          </h3>
+        {/* Interactive Head to Head Workbench */}
+        <div className="mb-12">
+          <HeadToHeadCalculator initialModelA={modelA.id} initialModelB={modelB.id} />
+        </div>
+
+        {/* Detailed Specs Side-by-Side Comparison */}
+        <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm mb-12">
+          <h2 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+            <Shield className="w-5 h-5 text-indigo-600" />
+            Architectural Specification Matrix
+          </h2>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-xs font-mono uppercase text-slate-400">
+                  <th className="py-3 px-4">Metric</th>
+                  <th className="py-3 px-4 flex items-center gap-2">
+                    {getProviderLogo(modelA.provider)} {modelA.name}
+                  </th>
+                  <th className="py-3 px-4">
+                    <div className="flex items-center gap-2">
+                      {getProviderLogo(modelB.provider)} {modelB.name}
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-mono text-xs">
+                <tr>
+                  <td className="py-3 px-4 font-sans font-medium text-slate-600">Provider</td>
+                  <td className="py-3 px-4 text-slate-900">{modelA.provider}</td>
+                  <td className="py-3 px-4 text-slate-900">{modelB.provider}</td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-4 font-sans font-medium text-slate-600">Input Price / 1M</td>
+                  <td className="py-3 px-4 text-slate-900 font-bold">${modelA.inputPricePerMillion.toFixed(2)}</td>
+                  <td className="py-3 px-4 text-slate-900 font-bold">${modelB.inputPricePerMillion.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-4 font-sans font-medium text-slate-600">Output Price / 1M</td>
+                  <td className="py-3 px-4 text-slate-900 font-bold">${modelA.outputPricePerMillion.toFixed(2)}</td>
+                  <td className="py-3 px-4 text-slate-900 font-bold">${modelB.outputPricePerMillion.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-4 font-sans font-medium text-slate-600">Cached Input / 1M</td>
+                  <td className="py-3 px-4 text-emerald-600 font-bold">
+                    {modelA.cachedInputPricePerMillion ? `$${modelA.cachedInputPricePerMillion.toFixed(3)}` : 'N/A'}
+                  </td>
+                  <td className="py-3 px-4 text-emerald-600 font-bold">
+                    {modelB.cachedInputPricePerMillion ? `$${modelB.cachedInputPricePerMillion.toFixed(3)}` : 'N/A'}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-4 font-sans font-medium text-slate-600">Context Window</td>
+                  <td className="py-3 px-4 text-slate-900">{modelA.contextWindow.toLocaleString()} tokens</td>
+                  <td className="py-3 px-4 text-slate-900">{modelB.contextWindow.toLocaleString()} tokens</td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-4 font-sans font-medium text-slate-600">Throughput Speed</td>
+                  <td className="py-3 px-4 text-slate-900">~{modelA.typicalSpeedTokensPerSec} t/s</td>
+                  <td className="py-3 px-4 text-slate-900">~{modelB.typicalSpeedTokensPerSec} t/s</td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-4 font-sans font-medium text-slate-600">License Architecture</td>
+                  <td className="py-3 px-4 text-slate-900">{modelA.isOpenWeights ? 'Open Weights' : 'Proprietary API'}</td>
+                  <td className="py-3 px-4 text-slate-900">{modelB.isOpenWeights ? 'Open Weights' : 'Proprietary API'}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Other Comparisons */}
+        <div className="mb-12">
+          <h3 className="text-base font-bold text-slate-900 mb-4">Related Head-to-Head Comparisons</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {POPULAR_COMPARISONS.filter((c) => c.slug !== params.slug).map((c) => (
+            {POPULAR_COMPARISONS.filter((c) => c.slug !== params.slug).slice(0, 6).map((c) => (
               <Link
                 key={c.slug}
                 href={`/compare/${c.slug}`}
-                className="p-3.5 rounded-xl bg-white border border-slate-200 hover:border-indigo-500 hover:shadow-xs transition-all text-xs text-slate-700 flex items-center justify-between"
+                className="p-4 rounded-xl bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-sm transition-all group flex items-center justify-between"
               >
-                <span className="font-semibold">{c.title.split(':')[0]}</span>
-                <ChevronRight className="w-4 h-4 text-indigo-600" />
+                <div>
+                  <div className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                    {c.title}
+                  </div>
+                  <div className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+                    {c.focusAngle}
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors shrink-0 ml-2" />
               </Link>
             ))}
           </div>
         </div>
 
-        {/* Bottom Ad */}
-        <AdPlacement slotId="compare-bottom-ad" format="horizontal-leaderboard" className="mt-10" />
+        {/* Sponsor Banner */}
+        <div className="mb-8">
+          <AdPlacement slotId="footer-compare-ad" />
+        </div>
       </div>
     </div>
   );

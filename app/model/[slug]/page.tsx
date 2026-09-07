@@ -1,7 +1,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
-import { AI_MODELS } from '@/data/models';
+import { AI_MODELS, AIModel } from '@/data/models';
 import HeadToHeadCalculator from '@/components/HeadToHeadCalculator';
 import AdPlacement from '@/components/AdPlacement';
 import { getProviderLogo } from '@/components/ProviderLogos';
@@ -15,6 +15,18 @@ interface ModelPageProps {
   };
 }
 
+export const dynamicParams = true;
+
+function findModel(slug: string): AIModel | undefined {
+  const clean = slug.toLowerCase().trim();
+  return AI_MODELS.find(
+    (m) =>
+      m.slug.toLowerCase() === clean ||
+      m.id.toLowerCase() === clean ||
+      m.id.replace(/-/g, '') === clean.replace(/-/g, '')
+  );
+}
+
 export async function generateStaticParams() {
   return AI_MODELS.map((model) => ({
     slug: model.slug,
@@ -22,7 +34,7 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: ModelPageProps): Promise<Metadata> {
-  const model = AI_MODELS.find((m) => m.slug === params.slug);
+  const model = findModel(params.slug);
   if (!model) {
     return {
       title: 'Model Pricing | APICostHub',
@@ -41,10 +53,15 @@ export async function generateMetadata({ params }: ModelPageProps): Promise<Meta
 }
 
 export default function ModelPage({ params }: ModelPageProps) {
-  const model = AI_MODELS.find((m) => m.slug === params.slug);
+  const model = findModel(params.slug);
   if (!model) {
     notFound();
   }
+
+  // Find a suggested comparison model
+  const competitorModel = AI_MODELS.find(
+    (m) => m.id !== model.id && (m.qualityTier === model.qualityTier || m.category === model.category)
+  ) || AI_MODELS[0];
 
   return (
     <div className="w-full min-h-screen bg-slate-50 text-slate-900">
@@ -74,67 +91,58 @@ export default function ModelPage({ params }: ModelPageProps) {
               {model.provider} · {model.category}
             </span>
           </div>
-          <p className="text-sm text-slate-600 mt-2 max-w-3xl leading-relaxed">
-            Standard published pricing: <strong className="text-slate-900 font-mono">${model.inputPricePerMillion.toFixed(2)}</strong> per 1M input tokens and{' '}
-            <strong className="text-slate-900 font-mono">${model.outputPricePerMillion.toFixed(2)}</strong> per 1M output tokens.
-            {model.cachedInputPricePerMillion &&
-              ` Supports prompt caching at $${model.cachedInputPricePerMillion.toFixed(2)}/1M.`}
+          <p className="text-sm sm:text-base text-slate-600 mt-3 max-w-2xl">
+            {model.description}
           </p>
         </div>
 
-        {/* Dense Specs Matrix */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 my-8">
-          <div className="surface-card rounded-2xl p-5 shadow-sm border border-slate-200">
-            <div className="text-xs text-slate-500 uppercase font-medium">Input Tokens</div>
-            <div className="text-xl font-bold text-slate-900 font-mono mt-1">
+        {/* Core Specs Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+          <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+            <div className="text-[11px] font-mono uppercase text-slate-500 mb-1">Input Price / 1M</div>
+            <div className="text-2xl font-mono font-bold text-slate-900">
               ${model.inputPricePerMillion.toFixed(2)}
             </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Per 1M Tokens</div>
+            <div className="text-[10px] text-slate-400 mt-1">USD per million tokens</div>
           </div>
 
-          <div className="surface-card rounded-2xl p-5 shadow-sm border border-slate-200">
-            <div className="text-xs text-slate-500 uppercase font-medium">Output Tokens</div>
-            <div className="text-xl font-bold text-slate-900 font-mono mt-1">
+          <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+            <div className="text-[11px] font-mono uppercase text-slate-500 mb-1">Output Price / 1M</div>
+            <div className="text-2xl font-mono font-bold text-slate-900">
               ${model.outputPricePerMillion.toFixed(2)}
             </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Per 1M Tokens</div>
+            <div className="text-[10px] text-slate-400 mt-1">USD per million tokens</div>
           </div>
 
-          <div className="surface-card rounded-2xl p-5 shadow-sm border border-slate-200">
-            <div className="text-xs text-slate-500 uppercase font-medium">Prompt Caching</div>
-            <div className="text-xl font-bold text-emerald-600 font-mono mt-1">
-              {model.cachedInputPricePerMillion ? `$${model.cachedInputPricePerMillion.toFixed(2)}` : 'N/A'}
-            </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">
-              {model.cachedInputPricePerMillion ? 'Discounted KV-Cache' : 'No Cache Discount'}
-            </div>
-          </div>
-
-          <div className="surface-card rounded-2xl p-5 shadow-sm border border-slate-200">
-            <div className="text-xs text-slate-500 uppercase font-medium">Context Window</div>
-            <div className="text-xl font-bold text-indigo-600 font-mono mt-1">
+          <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+            <div className="text-[11px] font-mono uppercase text-slate-500 mb-1">Context Window</div>
+            <div className="text-2xl font-mono font-bold text-indigo-600">
               {formatTokens(model.contextWindow)}
             </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">{model.typicalSpeedTokensPerSec} tokens/sec speed</div>
+            <div className="text-[10px] text-slate-400 mt-1">Max input tokens</div>
+          </div>
+
+          <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+            <div className="text-[11px] font-mono uppercase text-slate-500 mb-1">Throughput Speed</div>
+            <div className="text-2xl font-mono font-bold text-emerald-600">
+              ~{model.typicalSpeedTokensPerSec} <span className="text-xs font-normal text-slate-500">t/s</span>
+            </div>
+            <div className="text-[10px] text-slate-400 mt-1">Streaming velocity</div>
           </div>
         </div>
 
-        {/* Head-to-Head Calculator Section */}
-        <div className="my-10">
-          <div className="mb-4">
-            <h2 className="text-xl font-bold text-slate-900">
-              Interactive Unit Cost Simulator for {model.name}
-            </h2>
-            <p className="text-xs text-slate-500">
-              Simulate monthly infrastructure bills and benchmark against alternative architectures.
-            </p>
+        {/* Interactive Comparison Workbench */}
+        <div className="mb-12">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+            <Zap className="w-3.5 h-3.5 text-indigo-600" />
+            Interactive Head-to-Head Simulator
           </div>
-          <HeadToHeadCalculator />
+          <HeadToHeadCalculator initialModelA={model.id} initialModelB={competitorModel.id} />
         </div>
 
         {/* Ad Placement */}
-        <div className="my-8">
-          <AdPlacement slotId="model-bottom-ad" format="horizontal-leaderboard" />
+        <div className="mb-8">
+          <AdPlacement slotId="footer-model-ad" />
         </div>
       </div>
     </div>
